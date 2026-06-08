@@ -1,1522 +1,1497 @@
 <!DOCTYPE html>
 <html lang="ckb" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kurdost | Software Systems</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;600;700;900&family=Noto+Sans+Arabic:wght@300;400;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>پۆرتفۆلیۆی بەرنامەسازی</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;600;700;900&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --gold: #F5C518;
-    --gold-light: #FFE066;
-    --gold-dark: #B8860B;
-    --deep: #0C0803;
-    --dark: #130E05;
-    --card: #1A1208;
-    --card2: #201608;
-    --accent: #8B1A1A;
-    --accent2: #E8242B;
-    --teal: #C9780C;
-    --red: #E8242B;
-    --text: #FFF8E8;
-    --muted: #9A8A6A;
-    --border: rgba(245,197,24,0.18);
-    --glow-gold: rgba(245,197,24,0.3);
-    --glow-blue: rgba(232,36,43,0.2);
-  }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050508;
+  --c1:#6ee7f7;
+  --c2:#a78bfa;
+  --c3:#f472b6;
+  --gold:#fbbf24;
+  --text:#f1f5f9;
+  --muted:#94a3b8;
+  --card:#0d0d14;
+  --border:rgba(255,255,255,0.06);
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Noto Sans Arabic',sans-serif;
+  direction:rtl;
+  overflow-x:hidden;
+  cursor:none;
+}
 
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html { scroll-behavior: smooth; }
+/* ── CUSTOM CURSOR ── */
+.cursor{
+  position:fixed;width:12px;height:12px;
+  background:var(--c1);border-radius:50%;
+  pointer-events:none;z-index:9999;
+  transform:translate(-50%,-50%);
+  transition:transform .1s,width .3s,height .3s,opacity .3s;
+  mix-blend-mode:difference;
+}
+.cursor-ring{
+  position:fixed;width:40px;height:40px;
+  border:1px solid rgba(110,231,247,0.4);border-radius:50%;
+  pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:transform .15s ease,width .3s,height .3s;
+}
 
-  body {
-    font-family: 'Noto Kufi Arabic', 'Noto Sans Arabic', sans-serif;
-    background: var(--deep);
-    color: var(--text);
-    direction: rtl;
-    overflow-x: hidden;
-  }
+/* ── CANVAS BG ── */
+#bgCanvas{position:fixed;inset:0;z-index:0;opacity:.6}
 
-  .bg-canvas {
-    position: fixed; inset: 0; z-index: 0; overflow: hidden;
-    pointer-events: none;
-  }
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:1.4rem 4rem;
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(5,5,8,0.6);
+  backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{
+  font-size:1.1rem;font-weight:900;letter-spacing:3px;
+  background:linear-gradient(90deg,var(--c1),var(--c2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.nav-links{display:flex;gap:2.5rem;list-style:none;flex-direction:row-reverse}
+.nav-links a{
+  color:var(--muted);text-decoration:none;font-size:.85rem;
+  letter-spacing:1px;font-weight:600;
+  transition:color .3s;position:relative;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-4px;right:0;
+  width:0;height:1px;background:var(--c1);
+  transition:width .3s;
+}
+.nav-links a:hover{color:var(--c1)}
+.nav-links a:hover::after{width:100%}
 
-  .bg-blob {
-    position: absolute; border-radius: 50%;
-    filter: blur(80px); opacity: 0.55;
-    animation: blobFloat 12s ease-in-out infinite alternate;
-  }
-  .bg-blob-1 {
-    width: 700px; height: 500px;
-    background: radial-gradient(circle, #6b1a08 0%, transparent 70%);
-    top: -150px; right: -100px;
-    animation-duration: 14s;
-  }
-  .bg-blob-2 {
-    width: 500px; height: 500px;
-    background: radial-gradient(circle, #7a5500 0%, transparent 70%);
-    bottom: -100px; left: -100px;
-    animation-duration: 18s; animation-delay: -5s;
-  }
-  .bg-blob-3 {
-    width: 400px; height: 300px;
-    background: radial-gradient(circle, rgba(245,197,24,0.15) 0%, transparent 70%);
-    top: 40%; left: 30%;
-    animation-duration: 10s; animation-delay: -2s;
-  }
-  @keyframes blobFloat {
-    from { transform: translate(0,0) scale(1); }
-    to   { transform: translate(40px, 30px) scale(1.08); }
-  }
+/* ── SECTIONS ── */
+section{position:relative;z-index:1}
 
-  .bg-grid {
-    position: absolute; inset: 0;
-    background-image:
-      linear-gradient(rgba(245,197,24,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(245,197,24,0.04) 1px, transparent 1px);
-    background-size: 55px 55px;
-  }
+/* ── HERO ── */
+.hero{
+  min-height:100vh;
+  display:grid;place-items:center;
+  text-align:center;
+  padding:8rem 2rem 6rem;
+  position:relative;overflow:hidden;
+}
+.hero-glow{
+  position:absolute;
+  width:700px;height:700px;
+  background:radial-gradient(circle,rgba(110,231,247,.08) 0%,transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+.hero-inner{position:relative;z-index:2}
 
-  .bg-noise {
-    position: absolute; inset: 0; opacity: 0.025;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size: 200px;
-  }
+.badge{
+  display:inline-flex;align-items:center;gap:.6rem;
+  border:1px solid rgba(110,231,247,.2);
+  border-radius:4px;
+  padding:.4rem 1.4rem;
+  font-size:.75rem;letter-spacing:2px;font-weight:700;
+  color:var(--c1);margin-bottom:2.5rem;
+  background:rgba(110,231,247,.04);
+  text-transform:uppercase;
+}
+.badge-dot{
+  width:6px;height:6px;background:var(--c1);border-radius:50%;
+  animation:blink 2s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-  .bg-scan {
-    position: absolute; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.2), rgba(232,36,43,0.2), transparent);
-    animation: scanLine 8s linear infinite;
-  }
-  @keyframes scanLine {
-    from { top: -2px; }
-    to   { top: 100vh; }
-  }
+.hero-title{
+  font-size:clamp(3rem,8vw,7rem);
+  font-weight:900;line-height:1.05;
+  margin-bottom:2rem;
+  letter-spacing:-2px;
+}
+.hero-title .line1{
+  display:block;
+  background:linear-gradient(135deg,#fff 30%,var(--muted) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:slideUp .8s ease both;
+}
+.hero-title .line2{
+  display:block;
+  background:linear-gradient(90deg,var(--c1),var(--c2),var(--c3));
+  background-size:200%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:slideUp .9s .1s ease both,shimmer 4s linear infinite;
+}
+.hero-title .line3{
+  display:block;
+  background:linear-gradient(135deg,#fff 30%,var(--muted) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:slideUp 1s .2s ease both;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
 
-  nav {
-    position: fixed; top: 0; width: 100%; z-index: 200;
-    padding: 0 5%;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 72px;
-    background: rgba(12,8,3,0.8);
-    backdrop-filter: blur(24px) saturate(180%);
-    border-bottom: 1px solid rgba(245,197,24,0.12);
-  }
-  nav::after {
-    content: '';
-    position: absolute; bottom: 0; left: 5%; right: 5%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.3), rgba(232,36,43,0.2), transparent);
-  }
+.hero-sub{
+  font-size:1.05rem;color:var(--muted);
+  max-width:500px;margin:0 auto 3.5rem;
+  line-height:1.9;font-weight:300;
+  animation:slideUp 1s .3s ease both;
+}
+.hero-btns{
+  display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;
+  animation:slideUp 1s .4s ease both;
+}
+.btn{
+  display:inline-flex;align-items:center;gap:.6rem;
+  padding:.9rem 2rem;border-radius:6px;
+  font-size:.9rem;font-weight:700;
+  font-family:'Noto Sans Arabic',sans-serif;
+  cursor:none;text-decoration:none;
+  transition:all .3s;border:none;
+  letter-spacing:.5px;
+}
+.btn-glow{
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  color:#050508;
+  box-shadow:0 0 30px rgba(110,231,247,.2),0 0 60px rgba(110,231,247,.05);
+}
+.btn-glow:hover{
+  transform:translateY(-3px) scale(1.02);
+  box-shadow:0 0 50px rgba(110,231,247,.4),0 8px 30px rgba(0,0,0,.3);
+}
+.btn-wa{
+  background:linear-gradient(135deg,#25d366,#0ea552);
+  color:#fff;
+  box-shadow:0 0 30px rgba(37,211,102,.15);
+}
+.btn-wa:hover{
+  transform:translateY(-3px) scale(1.02);
+  box-shadow:0 0 50px rgba(37,211,102,.35);
+}
+.btn-ghost{
+  background:transparent;color:var(--text);
+  border:1px solid var(--border);
+}
+.btn-ghost:hover{border-color:var(--c1);color:var(--c1);transform:translateY(-3px)}
 
-  .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-  .logo-icon {
-    width: 46px; height: 46px;
-    background: linear-gradient(145deg, #2a1a05, #1a1005);
-    border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,197,24,0.15);
-    flex-shrink: 0;
-  }
-  .logo-wordmark {
-    font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; line-height: 1;
-  }
-  .logo-wordmark .k-red { color: #E8242B; }
-  .logo-wordmark .k-white { color: #fff; }
-  .logo-sub { font-size: 0.6rem; color: var(--muted); font-weight: 300; margin-top: 3px; letter-spacing: 0.5px; }
+/* scroll line */
+.scroll-line{
+  position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:.6rem;
+  color:var(--muted);font-size:.7rem;letter-spacing:2px;
+  animation:fadeIn 2s 1s ease both;
+}
+.scroll-track{width:1px;height:50px;background:var(--border);position:relative;overflow:hidden}
+.scroll-fill{
+  position:absolute;top:0;left:0;width:100%;height:40%;
+  background:linear-gradient(var(--c1),transparent);
+  animation:scrollFill 2s ease infinite;
+}
+@keyframes scrollFill{0%{top:-40%}100%{top:140%}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-  .nav-links { display: flex; gap: 30px; list-style: none; align-items: center; }
-  .nav-links a {
-    color: var(--muted); text-decoration: none; font-size: 0.88rem;
-    transition: color 0.25s; position: relative; padding-bottom: 2px;
-  }
-  .nav-links a::after {
-    content: ''; position: absolute; bottom: -2px; right: 0; left: 0;
-    height: 1px; background: var(--gold); transform: scaleX(0);
-    transition: transform 0.25s; transform-origin: right;
-  }
-  .nav-links a:hover { color: var(--gold-light); }
-  .nav-links a:hover::after { transform: scaleX(1); transform-origin: left; }
+/* ── DIVIDER LINE ── */
+.h-line{
+  height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);
+  position:relative;z-index:1;
+}
 
-  .nav-cta {
-    background: linear-gradient(135deg,
-      rgba(245,197,24,0.18) 0%,
-      rgba(255,224,102,0.1) 50%,
-      rgba(184,134,11,0.22) 100%) !important;
-    backdrop-filter: blur(16px) !important;
-    border: 1px solid rgba(245,197,24,0.45) !important;
-    color: #FFE066 !important;
-    padding: 9px 24px; border-radius: 10px; font-weight: 800 !important;
-    box-shadow:
-      0 4px 20px rgba(245,197,24,0.2),
-      inset 0 1px 0 rgba(255,232,80,0.3),
-      inset 0 -1px 0 rgba(0,0,0,0.15) !important;
-    text-shadow: 0 0 16px rgba(245,197,24,0.6) !important;
-    transition: all 0.3s ease !important;
-  }
-  .nav-cta:hover {
-    background: linear-gradient(135deg,
-      rgba(245,197,24,0.28) 0%,
-      rgba(255,224,102,0.18) 50%,
-      rgba(184,134,11,0.32) 100%) !important;
-    border-color: rgba(245,197,24,0.7) !important;
-    box-shadow:
-      0 6px 30px rgba(245,197,24,0.35),
-      inset 0 1px 0 rgba(255,232,80,0.45) !important;
-    transform: translateY(-1px);
-    color: #FFF0A0 !important;
-  }
-  .nav-cta::after { display: none !important; }
+/* ── STATS BAR ── */
+.stats-bar{
+  display:flex;justify-content:center;
+  gap:0;flex-wrap:wrap;
+  position:relative;z-index:1;
+}
+.stat{
+  flex:1;min-width:160px;
+  padding:3rem 2rem;text-align:center;
+  border-left:1px solid var(--border);
+  transition:background .3s;
+}
+.stat:last-child{border-right:1px solid var(--border)}
+.stat:hover{background:rgba(110,231,247,.02)}
+.stat-n{
+  font-size:3rem;font-weight:900;letter-spacing:-2px;
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  line-height:1;
+}
+.stat-l{color:var(--muted);font-size:.8rem;letter-spacing:1px;margin-top:.5rem;font-weight:600}
 
-  .hero {
-    position: relative; z-index: 1;
-    min-height: 100vh;
-    display: flex; align-items: center; justify-content: center;
-    flex-direction: column; text-align: center;
-    padding: 120px 5% 80px;
-  }
+/* ── SECTION LABEL ── */
+.sec-label{
+  display:inline-flex;align-items:center;gap:.8rem;
+  font-size:.7rem;letter-spacing:3px;font-weight:700;
+  color:var(--muted);text-transform:uppercase;
+  margin-bottom:1.2rem;
+}
+.sec-label::before{content:'';width:30px;height:1px;background:var(--c1)}
+.sec-title{
+  font-size:clamp(2rem,5vw,3.5rem);font-weight:900;
+  letter-spacing:-1px;line-height:1.1;margin-bottom:1rem;
+}
+.sec-sub{color:var(--muted);font-size:.95rem;line-height:1.8;max-width:500px}
 
-  .hero-glow {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -55%);
-    width: 700px; height: 700px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(232,36,43,0.06) 0%, rgba(245,197,24,0.05) 40%, transparent 65%);
-    pointer-events: none;
-  }
+/* ── SKILLS ── */
+.skills-wrap{padding:8rem 4rem;max-width:1200px;margin:0 auto}
+.skills-head{margin-bottom:4rem}
+.skills-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(130px,1fr));
+  gap:.8rem;
+}
+.sk{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:1.8rem 1rem;
+  text-align:center;
+  transition:all .4s;
+  position:relative;overflow:hidden;
+}
+.sk::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--c1),var(--c2));
+  opacity:0;transition:opacity .4s;z-index:0;
+}
+.sk:hover::before{opacity:.07}
+.sk:hover{
+  border-color:rgba(110,231,247,.3);
+  transform:translateY(-6px);
+  box-shadow:0 20px 40px rgba(0,0,0,.4),0 0 20px rgba(110,231,247,.06);
+}
+.sk>*{position:relative;z-index:1}
+.sk-icon{font-size:2rem;margin-bottom:.6rem;display:block}
+.sk-name{font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.5px}
 
-  .badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(245,197,24,0.08);
-    border: 1px solid rgba(245,197,24,0.3);
-    border-radius: 50px; padding: 7px 20px;
-    font-size: 0.78rem; color: var(--gold-light);
-    margin-bottom: 32px;
-    animation: fadeUp 0.8s ease both;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 20px rgba(245,197,24,0.08), inset 0 1px 0 rgba(245,197,24,0.1);
-  }
-  .badge-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--gold);
-    box-shadow: 0 0 8px var(--gold);
-    animation: pulse 2s ease infinite;
-  }
-  @keyframes pulse {
-    0%,100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(0.8); }
-  }
+/* ── PROJECTS ── */
+.projects-wrap{
+  padding:8rem 4rem;
+  background:linear-gradient(180deg,transparent,rgba(110,231,247,.015),transparent);
+}
+.projects-inner{max-width:1200px;margin:0 auto}
+.proj-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
+  gap:1.2rem;margin-top:4rem;
+}
+.proj{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+  transition:all .4s;position:relative;
+}
+.proj::after{
+  content:'';position:absolute;
+  inset:0;border-radius:12px;
+  box-shadow:inset 0 0 0 1px rgba(110,231,247,0);
+  transition:box-shadow .4s;
+}
+.proj:hover::after{box-shadow:inset 0 0 0 1px rgba(110,231,247,.2)}
+.proj:hover{transform:translateY(-8px);box-shadow:0 30px 60px rgba(0,0,0,.5)}
+.proj-thumb{
+  height:180px;display:flex;align-items:center;justify-content:center;
+  font-size:3.5rem;position:relative;overflow:hidden;
+}
+.proj-thumb::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:60px;
+  background:linear-gradient(transparent,var(--card));
+}
+.proj-body{padding:1.5rem}
+.proj-chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.chip{
+  background:rgba(110,231,247,.06);
+  border:1px solid rgba(110,231,247,.12);
+  color:var(--c1);padding:.15rem .6rem;
+  border-radius:3px;font-size:.68rem;font-weight:700;letter-spacing:.5px;
+}
+.proj-name{font-size:1.05rem;font-weight:800;margin-bottom:.5rem;letter-spacing:-.3px}
+.proj-desc{color:var(--muted);font-size:.85rem;line-height:1.7}
 
-  h1 {
-    font-size: clamp(2.4rem, 5.5vw, 4.8rem);
-    font-weight: 900; line-height: 1.15;
-    margin-bottom: 28px;
-    animation: fadeUp 0.8s 0.15s ease both;
-    text-shadow: 0 0 60px rgba(201,168,76,0.15);
-  }
-  .h1-gold {
-    background: linear-gradient(135deg, #F5C518, #FFE066, #F5C518);
-    background-size: 200%;
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    animation: shimmer 4s linear infinite;
-    display: block;
-  }
-  .h1-sub-line {
-    background: linear-gradient(90deg, #E8242B, #FF6B6B, #E8242B);
-    background-size: 200%;
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    animation: shimmer 5s linear infinite reverse;
-    font-size: 0.55em; font-weight: 400; display: block; margin-top: 8px;
-    letter-spacing: 0.5px;
-  }
-  @keyframes shimmer {
-    from { background-position: 200% center; }
-    to   { background-position: -200% center; }
-  }
+/* ── SERVICES ── */
+.services-wrap{padding:8rem 4rem;max-width:1200px;margin:0 auto}
+.svc-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:1rem;margin-top:4rem;
+}
+.svc{
+  border:1px solid var(--border);
+  border-radius:12px;padding:2.5rem;
+  transition:all .4s;position:relative;overflow:hidden;
+  background:var(--card);
+}
+.svc-num{
+  position:absolute;top:1.5rem;left:1.5rem;
+  font-size:4rem;font-weight:900;
+  color:rgba(255,255,255,.03);letter-spacing:-2px;
+  line-height:1;
+}
+.svc:hover{
+  border-color:rgba(167,139,250,.3);
+  transform:translateY(-6px);
+  box-shadow:0 20px 50px rgba(0,0,0,.4),0 0 30px rgba(167,139,250,.06);
+}
+.svc-ico{
+  width:52px;height:52px;border-radius:10px;
+  background:linear-gradient(135deg,var(--c2),var(--c1));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;margin-bottom:1.5rem;
+}
+.svc-name{font-size:1rem;font-weight:800;margin-bottom:.6rem;letter-spacing:-.2px}
+.svc-desc{color:var(--muted);font-size:.85rem;line-height:1.7}
 
-  .hero-sub {
-    font-size: 1.1rem; color: var(--muted);
-    max-width: 600px; line-height: 1.9;
-    margin-bottom: 48px;
-    animation: fadeUp 0.8s 0.3s ease both;
-    font-weight: 300;
-  }
-  .hero-sub strong { color: var(--gold-light); font-weight: 700; }
+/* ── CONTACT ── */
+.contact-wrap{
+  padding:8rem 4rem;
+  background:radial-gradient(ellipse at center bottom,rgba(110,231,247,.04) 0%,transparent 70%);
+  position:relative;z-index:1;
+}
+.contact-inner{max-width:900px;margin:0 auto;text-align:center}
+.contact-cards{
+  display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-top:4rem;
+}
+.ccard{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:2.5rem 3.5rem;
+  text-decoration:none;color:var(--text);
+  display:flex;flex-direction:column;align-items:center;gap:1rem;
+  transition:all .4s;min-width:240px;position:relative;overflow:hidden;
+}
+.ccard::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(37,211,102,.06),transparent);
+  opacity:0;transition:opacity .4s;
+}
+.ccard:hover::before{opacity:1}
+.ccard:hover{
+  border-color:rgba(37,211,102,.3);
+  transform:translateY(-8px);
+  box-shadow:0 20px 50px rgba(0,0,0,.4),0 0 40px rgba(37,211,102,.08);
+}
+.wa-circle{
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg,#25d366,#0ea552);
+  display:flex;align-items:center;justify-content:center;
+  font-size:2rem;
+  box-shadow:0 0 30px rgba(37,211,102,.3);
+}
+.clabel{color:var(--muted);font-size:.75rem;letter-spacing:1.5px;font-weight:700;text-transform:uppercase}
+.cnum{font-size:1.25rem;font-weight:900;letter-spacing:-1px;direction:ltr}
+.ctag{color:#25d366;font-size:.75rem;font-weight:700;letter-spacing:.5px}
 
-  .hero-btns {
-    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
-    animation: fadeUp 0.8s 0.45s ease both;
-  }
+.trust-box{
+  margin-top:3rem;
+  border:1px solid var(--border);
+  border-radius:12px;padding:2.5rem;
+  background:var(--card);
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.2rem;
+}
+.trust-item{
+  display:flex;align-items:center;gap:.8rem;
+  color:var(--muted);font-size:.85rem;font-weight:600;
+}
+.trust-item::before{
+  content:'✓';
+  width:28px;height:28px;flex-shrink:0;
+  background:rgba(110,231,247,.08);border:1px solid rgba(110,231,247,.15);
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  color:var(--c1);font-size:.8rem;font-weight:900;
+  display:grid;place-items:center;
+}
 
-  .btn-primary {
-    position: relative; overflow: hidden;
-    background: linear-gradient(135deg,
-      rgba(245,197,24,0.18) 0%,
-      rgba(255,224,102,0.10) 40%,
-      rgba(184,134,11,0.22) 100%);
-    backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(245,197,24,0.45);
-    color: #FFE066;
-    padding: 15px 36px; border-radius: 14px;
-    font-weight: 800; font-size: 1rem; text-decoration: none;
-    cursor: pointer; font-family: inherit;
-    letter-spacing: 0.4px;
-    box-shadow:
-      0 8px 32px rgba(245,197,24,0.2),
-      0 2px 8px rgba(0,0,0,0.4),
-      inset 0 1px 0 rgba(255,232,80,0.35),
-      inset 0 -1px 0 rgba(0,0,0,0.2);
-    transition: all 0.3s cubic-bezier(.22,.68,0,1.2);
-    text-shadow: 0 0 20px rgba(245,197,24,0.6), 0 1px 3px rgba(0,0,0,0.5);
-  }
-  .btn-primary:hover {
-    background: linear-gradient(135deg,
-      rgba(245,197,24,0.28) 0%,
-      rgba(255,224,102,0.18) 40%,
-      rgba(184,134,11,0.32) 100%);
-    border-color: rgba(245,197,24,0.7);
-    box-shadow:
-      0 14px 48px rgba(245,197,24,0.35),
-      0 4px 16px rgba(0,0,0,0.4),
-      inset 0 1px 0 rgba(255,232,80,0.5),
-      inset 0 -1px 0 rgba(0,0,0,0.2);
-    transform: translateY(-3px) scale(1.02);
-    color: #FFF0A0;
-    text-shadow: 0 0 30px rgba(245,197,24,0.9), 0 1px 3px rgba(0,0,0,0.5);
-  }
+/* ── FOOTER ── */
+footer{
+  padding:2.5rem 4rem;
+  border-top:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;
+  flex-wrap:wrap;gap:1rem;
+  position:relative;z-index:1;
+  background:rgba(5,5,8,.8);
+}
+.ft-logo{
+  font-size:.9rem;font-weight:900;letter-spacing:3px;
+  background:linear-gradient(90deg,var(--c1),var(--c2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.ft-copy{color:var(--muted);font-size:.78rem;letter-spacing:.5px}
 
-  .btn-secondary {
-    position: relative; overflow: hidden;
-    background: linear-gradient(135deg,
-      rgba(232,36,43,0.12) 0%,
-      rgba(180,20,25,0.08) 50%,
-      rgba(232,36,43,0.14) 100%);
-    backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(232,36,43,0.35);
-    color: #FFB8BA;
-    padding: 15px 36px; border-radius: 14px;
-    font-weight: 700; font-size: 1rem; text-decoration: none;
-    cursor: pointer; font-family: inherit;
-    box-shadow:
-      0 8px 32px rgba(232,36,43,0.15),
-      0 2px 8px rgba(0,0,0,0.4),
-      inset 0 1px 0 rgba(255,180,180,0.2),
-      inset 0 -1px 0 rgba(0,0,0,0.2);
-    transition: all 0.3s cubic-bezier(.22,.68,0,1.2);
-    text-shadow: 0 0 16px rgba(232,36,43,0.5), 0 1px 3px rgba(0,0,0,0.5);
-  }
-  .btn-secondary:hover {
-    background: linear-gradient(135deg,
-      rgba(232,36,43,0.22) 0%,
-      rgba(180,20,25,0.15) 50%,
-      rgba(232,36,43,0.24) 100%);
-    border-color: rgba(232,36,43,0.6);
-    box-shadow:
-      0 14px 48px rgba(232,36,43,0.28),
-      0 4px 16px rgba(0,0,0,0.4),
-      inset 0 1px 0 rgba(255,180,180,0.3);
-    transform: translateY(-3px) scale(1.02);
-    color: #FFD0D0;
-    text-shadow: 0 0 24px rgba(232,36,43,0.8), 0 1px 3px rgba(0,0,0,0.5);
-  }
+/* ── REVEAL ── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
 
-  .contact-btn.teal {
-    background: linear-gradient(135deg,
-      rgba(245,197,24,0.15) 0%,
-      rgba(184,134,11,0.1) 50%,
-      rgba(245,197,24,0.18) 100%);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(245,197,24,0.4);
-    color: #FFE066;
-    box-shadow:
-      0 6px 24px rgba(245,197,24,0.18),
-      0 2px 6px rgba(0,0,0,0.35),
-      inset 0 1px 0 rgba(255,232,80,0.25);
-    text-shadow: 0 0 14px rgba(245,197,24,0.5);
-  }
-  .contact-btn.teal:hover {
-    background: linear-gradient(135deg,
-      rgba(245,197,24,0.26) 0%,
-      rgba(184,134,11,0.18) 50%,
-      rgba(245,197,24,0.28) 100%);
-    border-color: rgba(245,197,24,0.65);
-    box-shadow:
-      0 10px 36px rgba(245,197,24,0.32),
-      inset 0 1px 0 rgba(255,232,80,0.35);
-    transform: translateY(-2px);
-    color: #FFF0A0;
-    text-shadow: 0 0 20px rgba(245,197,24,0.8);
-  }
+/* ── HAMBURGER MENU ── */
+.hamburger{
+  display:none;flex-direction:column;gap:5px;
+  background:none;border:none;padding:4px;z-index:200;cursor:pointer;
+}
+.hamburger span{
+  display:block;width:24px;height:2px;
+  background:var(--c1);border-radius:2px;transition:all .3s;
+}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
 
-  .contact-btn.email-btn {
-    background: linear-gradient(135deg,
-      rgba(232,36,43,0.15) 0%,
-      rgba(140,15,20,0.12) 50%,
-      rgba(232,36,43,0.18) 100%);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(232,36,43,0.4);
-    color: #FFB8BA;
-    box-shadow:
-      0 6px 24px rgba(232,36,43,0.18),
-      inset 0 1px 0 rgba(255,160,160,0.2);
-    text-shadow: 0 0 14px rgba(232,36,43,0.5);
-  }
-  .contact-btn.email-btn:hover {
-    background: linear-gradient(135deg,
-      rgba(232,36,43,0.26) 0%,
-      rgba(140,15,20,0.2) 50%,
-      rgba(232,36,43,0.28) 100%);
-    border-color: rgba(232,36,43,0.65);
-    box-shadow:
-      0 10px 36px rgba(232,36,43,0.32),
-      inset 0 1px 0 rgba(255,160,160,0.3);
-    transform: translateY(-2px);
-    color: #FFD0D0;
-    text-shadow: 0 0 20px rgba(232,36,43,0.8);
-  }
+.mobile-menu{
+  display:none;position:fixed;inset:0;
+  background:rgba(5,5,8,.97);backdrop-filter:blur(20px);
+  z-index:150;flex-direction:column;
+  align-items:center;justify-content:center;gap:2.5rem;
+}
+.mobile-menu.open{display:flex}
+.mobile-menu a{
+  color:var(--text);text-decoration:none;
+  font-size:1.6rem;font-weight:700;letter-spacing:2px;transition:color .3s;
+}
+.mobile-menu a:hover{color:var(--c1)}
 
-  .stats-bar {
-    position: relative; z-index: 1;
-    display: flex; justify-content: center; flex-wrap: wrap;
-    background: rgba(20,14,4,0.85);
-    border-top: 1px solid rgba(245,197,24,0.1);
-    border-bottom: 1px solid rgba(245,197,24,0.1);
-    padding: 32px 5%;
-    backdrop-filter: blur(20px);
-  }
-  .stats-bar::before {
-    content: '';
-    position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.5), rgba(232,36,43,0.3), transparent);
-  }
-  .stat-item {
-    flex: 1; min-width: 140px; max-width: 220px;
-    text-align: center; padding: 0 24px;
-    border-left: 1px solid rgba(245,197,24,0.12);
-  }
-  .stat-item:last-child { border-left: none; }
-  .stat-num {
-    font-size: 2.6rem; font-weight: 900;
-    background: linear-gradient(135deg, var(--gold), var(--gold-light));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+/* ── TABLET ── */
+@media(max-width:1024px){
+  nav{padding:1.2rem 2rem}
+  .skills-wrap,.services-wrap{padding:6rem 2rem}
+  .projects-wrap,.contact-wrap{padding:6rem 2rem}
+  .proj-grid{grid-template-columns:repeat(2,1fr)}
+  .svc-grid{grid-template-columns:repeat(2,1fr)}
+}
 
-  section { position: relative; z-index: 1; padding: 100px 5%; }
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .cursor,.cursor-ring{display:none}
+  body{cursor:auto}
 
-  .section-header { text-align: center; margin-bottom: 64px; }
-  .section-tag {
-    display: inline-block;
-    font-size: 0.7rem; letter-spacing: 3px;
-    color: var(--gold);
-    border: 1px solid rgba(245,197,24,0.25);
-    background: rgba(245,197,24,0.06);
-    padding: 5px 18px; border-radius: 50px; margin-bottom: 16px;
-    backdrop-filter: blur(8px);
-  }
-  .section-title { font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 900; margin-bottom: 16px; }
-  .section-sub { color: var(--muted); font-size: 1rem; max-width: 500px; margin: 0 auto; line-height: 1.8; }
+  /* NAV */
+  nav{padding:.9rem 1.2rem}
+  .nav-links{display:none}
+  .hamburger{display:flex}
 
-  .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
-    gap: 24px;
+  /* HERO — نفس التصميم بس أصغر */
+  .hero{padding:6rem 1.4rem 3rem}
+  .hero-glow{width:300px;height:300px}
+  .badge{font-size:.7rem;padding:.35rem 1rem;letter-spacing:1px;margin-bottom:1.8rem}
+  .hero-title{
+    font-size:clamp(2rem,9vw,3rem);
+    letter-spacing:-1px;margin-bottom:1.4rem;line-height:1.15;
   }
+  .hero-sub{font-size:.9rem;margin-bottom:2.5rem;padding:0}
+  .hero-btns{flex-direction:column;gap:.8rem}
+  .btn{justify-content:center;padding:.85rem 1.4rem;font-size:.88rem}
+  .scroll-line{display:none}
 
-  .product-card {
-    background: linear-gradient(145deg, #1A1208, #120D04);
-    border: 1px solid rgba(245,197,24,0.08);
-    border-radius: 22px; overflow: hidden;
-    transition: transform 0.35s cubic-bezier(.22,.68,0,1.2), box-shadow 0.35s, border-color 0.3s;
-    position: relative;
+  /* STATS — نفس الشكل بس صفين */
+  .stats-bar{flex-wrap:wrap}
+  .stat{
+    flex:1 1 calc(50% - 1px);
+    padding:2rem 1rem;
+    border-left:none;border-top:1px solid var(--border);
   }
-  .product-card::before {
-    content: ''; position: absolute; inset: 0; border-radius: 22px;
-    background: linear-gradient(145deg, rgba(245,197,24,0.04) 0%, transparent 60%);
-    pointer-events: none;
-  }
-  .product-card:hover {
-    transform: translateY(-10px) scale(1.01);
-    box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 40px rgba(245,197,24,0.12);
-    border-color: rgba(245,197,24,0.3);
-  }
+  .stat:nth-child(odd){border-right:1px solid var(--border)}
+  .stat:last-child{border-right:none}
+  .stat-n{font-size:2rem}
+  .stat-l{font-size:.75rem}
 
-  .card-mockup {
-    height: 220px; position: relative; overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .card-mockup::after {
-    content: ''; position: absolute; inset: 0;
-    background: linear-gradient(to bottom, transparent 60%, rgba(10,16,32,0.7));
-    pointer-events: none;
-  }
+  /* SECTION HEADERS — نفس التصميم */
+  .sec-label{font-size:.65rem;letter-spacing:2px}
+  .sec-title{font-size:clamp(1.6rem,6vw,2.2rem);letter-spacing:-.5px}
+  .sec-sub{font-size:.88rem}
 
-  .mockup-erp { background: linear-gradient(140deg, #1A0E03 0%, #251505 100%); }
-  .mockup-erp .m-inner { width:88%;height:78%;background:#120A02;border-radius:10px;border:1px solid rgba(245,197,24,0.1);padding:10px;display:flex;gap:8px; }
-  .m-sidebar { width:28%;background:rgba(245,197,24,0.05);border-radius:6px;padding:8px 6px;display:flex;flex-direction:column;gap:5px; }
-  .m-sidebar-item { height:10px;border-radius:3px;background:rgba(245,197,24,0.08); }
-  .m-sidebar-item.active { background:var(--gold-dark);opacity:0.8; }
-  .m-main { flex:1;display:flex;flex-direction:column;gap:8px; }
-  .m-header-bar { height:20px;background:rgba(245,197,24,0.06);border-radius:5px; }
-  .m-cards { display:grid;grid-template-columns:1fr 1fr;gap:5px; }
-  .m-mini-card { background:rgba(245,197,24,0.1);border-radius:5px;height:30px;display:flex;align-items:center;justify-content:center; }
-  .m-chart { flex:1;background:rgba(232,36,43,0.1);border-radius:5px;display:flex;align-items:flex-end;justify-content:space-around;padding:6px; }
-  .m-bar { width:10px;border-radius:2px;background:#E8242B; }
+  /* SKILLS */
+  .skills-wrap{padding:4rem 1.2rem}
+  .skills-grid{grid-template-columns:repeat(3,1fr);gap:.6rem}
+  .sk{padding:1.2rem .5rem}
+  .sk-icon{font-size:1.5rem;margin-bottom:.4rem}
+  .sk-name{font-size:.68rem;letter-spacing:0}
 
-  .mockup-pos { background:linear-gradient(140deg,#1A0D03 0%,#120A02 100%); }
-  .mockup-pos .m-inner { width:85%;height:80%;background:#0E0802;border-radius:10px;border:1px solid rgba(245,197,24,0.08);padding:10px;display:flex;gap:8px; }
-  .m-products-grid { width:55%;display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px; }
-  .m-prod-item { background:rgba(232,36,43,0.12);border-radius:5px;height:28px; }
-  .m-cart { flex:1;background:rgba(245,197,24,0.04);border-radius:6px;padding:6px;display:flex;flex-direction:column;gap:4px; }
-  .m-cart-row { height:9px;background:rgba(245,197,24,0.07);border-radius:3px; }
-  .m-total-box { margin-top:auto;background:rgba(232,36,43,0.25);border-radius:5px;height:22px; }
+  /* PROJECTS — نفس الكارت بس عمود واحد */
+  .projects-wrap{padding:4rem 1.2rem}
+  .proj-grid{grid-template-columns:1fr;gap:1rem;margin-top:2rem}
+  .proj-thumb{height:170px}
+  .proj-body{padding:1.2rem}
+  .proj-name{font-size:1rem}
+  .proj-desc{font-size:.82rem}
+  .chip{font-size:.65rem;padding:.12rem .5rem}
 
-  .mockup-hr { background:linear-gradient(140deg,#1A0A0A 0%,#250A0A 100%); }
-  .mockup-hr .m-inner { width:88%;height:78%;background:#100505;border-radius:10px;border:1px solid rgba(232,36,43,0.1);padding:10px;display:flex;flex-direction:column;gap:7px; }
-  .m-hr-top { display:flex;gap:6px; }
-  .m-avatar { width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#E8242B,#8B1515); }
-  .m-avatar-info { flex:1;display:flex;flex-direction:column;gap:4px;justify-content:center; }
-  .m-info-line { height:7px;background:rgba(245,197,24,0.12);border-radius:3px; }
-  .m-info-line.short { width:50%; }
-  .m-table-rows { display:flex;flex-direction:column;gap:4px; }
-  .m-table-row { height:14px;background:rgba(245,197,24,0.04);border-radius:4px;display:flex;gap:4px;align-items:center;padding:0 6px; }
-  .m-table-cell { flex:1;height:6px;background:rgba(245,197,24,0.08);border-radius:2px; }
-  .m-table-cell.accent { background:rgba(232,36,43,0.5); }
+  /* SERVICES — نفس الكارت */
+  .services-wrap{padding:4rem 1.2rem}
+  .svc-grid{grid-template-columns:1fr;gap:.8rem;margin-top:2rem}
+  .svc{padding:1.8rem 1.5rem}
+  .svc-num{font-size:3rem;top:1rem;left:1rem}
+  .svc-ico{width:44px;height:44px;font-size:1.2rem;margin-bottom:1rem}
+  .svc-name{font-size:.95rem}
+  .svc-desc{font-size:.82rem}
 
-  .mockup-web { background:linear-gradient(140deg,#150E03 0%,#1A1205 100%); }
-  .mockup-web .m-inner { width:88%;height:80%;background:#0E0902;border-radius:10px;border:1px solid rgba(245,197,24,0.08);overflow:hidden;display:flex;flex-direction:column; }
-  .m-browser-bar { height:22px;background:rgba(245,197,24,0.05);display:flex;align-items:center;padding:0 8px;gap:5px; }
-  .m-dot { width:7px;height:7px;border-radius:50%; }
-  .m-url-bar { flex:1;height:12px;background:rgba(245,197,24,0.08);border-radius:3px;margin-right:8px; }
-  .m-browser-content { flex:1;padding:8px;display:flex;flex-direction:column;gap:6px; }
-  .m-hero-section { height:45px;background:linear-gradient(90deg,rgba(232,36,43,0.25),rgba(245,197,24,0.15));border-radius:6px; }
-  .m-section-cols { display:flex;gap:5px;flex:1; }
-  .m-col { flex:1;background:rgba(245,197,24,0.04);border-radius:5px; }
+  /* CONTACT */
+  .contact-wrap{padding:4rem 1.2rem}
+  .contact-cards{flex-direction:column;gap:.8rem}
+  .ccard{padding:1.8rem 1.5rem;min-width:unset}
+  .wa-circle{width:50px;height:50px;font-size:1.5rem}
+  .clabel{font-size:.7rem}
+  .cnum{font-size:1.1rem}
+  .trust-box{grid-template-columns:1fr;gap:.7rem;padding:1.5rem}
+  .trust-item{font-size:.82rem}
 
-  .mockup-app { background:linear-gradient(140deg,#181005 0%,#201505 100%); }
-  .m-phone { width:110px;height:185px;background:#0A0702;border-radius:22px;border:2px solid rgba(245,197,24,0.3);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.5),inset 0 0 0 1px rgba(245,197,24,0.05); }
-  .m-phone-bar { height:14px;background:#0A0702;display:flex;justify-content:center;align-items:flex-end;padding-bottom:2px; }
-  .m-notch { width:30px;height:7px;background:#1A1005;border-radius:0 0 6px 6px; }
-  .m-phone-content { flex:1;background:#0F0B04;padding:6px;display:flex;flex-direction:column;gap:5px; }
-  .m-app-header { height:16px;background:linear-gradient(90deg,var(--gold-dark),var(--gold));border-radius:4px;opacity:0.8; }
-  .m-app-cards { display:grid;grid-template-columns:1fr 1fr;gap:4px; }
-  .m-app-card { height:35px;background:rgba(245,197,24,0.1);border-radius:5px; }
-  .m-app-list { display:flex;flex-direction:column;gap:4px;margin-top:2px; }
-  .m-app-row { height:10px;background:rgba(245,197,24,0.06);border-radius:3px; }
+  /* FOOTER */
+  footer{padding:1.5rem 1.2rem;flex-direction:column;text-align:center;gap:.4rem}
 
-  .mockup-acc { background:linear-gradient(140deg,#120D03 0%,#181005 100%); }
-  .mockup-acc .m-inner { width:88%;height:78%;background:#0C0802;border-radius:10px;border:1px solid rgba(245,197,24,0.07);padding:10px;display:flex;flex-direction:column;gap:7px; }
-  .m-top-metrics { display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px; }
-  .m-metric { background:rgba(245,197,24,0.08);border-radius:6px;height:30px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px; }
-  .m-metric-num { height:9px;width:55%;background:var(--gold);border-radius:3px;opacity:0.7; }
-  .m-metric-label { height:5px;width:70%;background:rgba(245,197,24,0.07);border-radius:2px; }
-  .m-pie-row { display:flex;gap:8px;align-items:center; }
-  .m-pie { width:45px;height:45px;border-radius:50%;background:conic-gradient(#F5C518 0% 40%,#E8242B 40% 70%,rgba(184,134,11,0.8) 70% 100%); }
-  .m-legend { flex:1;display:flex;flex-direction:column;gap:5px; }
-  .m-legend-row { display:flex;align-items:center;gap:5px; }
-  .m-legend-dot { width:8px;height:8px;border-radius:50%; }
-  .m-legend-text { height:6px;flex:1;background:rgba(245,197,24,0.08);border-radius:3px; }
-  .m-table2 { flex:1;background:rgba(245,197,24,0.03);border-radius:6px;padding:6px;display:flex;flex-direction:column;gap:4px; }
-  .m-t-row { height:11px;background:rgba(245,197,24,0.05);border-radius:3px; }
+  /* H-LINE */
+  .h-line{margin:0}
+}
 
-  .card-body { padding: 24px 26px; }
-  .card-icon {
-    width: 48px; height: 48px; border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px; margin-bottom: 16px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-  }
-  .card-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 10px; }
-  .card-desc { font-size: 0.84rem; color: var(--muted); line-height: 1.75; margin-bottom: 18px; }
-  .card-tags { display: flex; flex-wrap: wrap; gap: 7px; }
-  .tag {
-    font-size: 0.68rem; padding: 4px 12px; border-radius: 50px;
-    background: rgba(255,255,255,0.05);
-    color: var(--muted); border: 1px solid rgba(255,255,255,0.07);
-  }
-  .tag.gold {
-    background: rgba(245,197,24,0.1); color: var(--gold-light);
-    border-color: rgba(245,197,24,0.22);
-  }
-
-  .card-badge {
-    position: absolute; top: 14px; left: 14px; z-index: 5;
-    background: linear-gradient(135deg, #8B1515, #E8242B);
-    color: #fff; font-size: 0.65rem; font-weight: 800;
-    padding: 4px 12px; border-radius: 50px;
-    box-shadow: 0 2px 10px rgba(232,36,43,0.5);
-  }
-
-  .features-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 20px;
-  }
-  .feature-card {
-    background: linear-gradient(145deg, rgba(26,18,8,0.95), rgba(18,13,4,0.95));
-    border: 1px solid rgba(245,197,24,0.07);
-    border-radius: 18px; padding: 30px 24px;
-    transition: border-color 0.3s, transform 0.35s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s;
-    position: relative; overflow: hidden;
-  }
-  .feature-card::before {
-    content: ''; position: absolute; top: 0; right: 0; left: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.1), transparent);
-  }
-  .feature-card:hover {
-    border-color: rgba(245,197,24,0.3);
-    transform: translateY(-6px);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(245,197,24,0.07);
-  }
-  .feature-icon { font-size: 2.2rem; margin-bottom: 16px; display: inline-block; }
-  .feature-title { font-size: 1rem; font-weight: 800; margin-bottom: 10px; }
-  .feature-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.75; }
-
-  .process-steps {
-    display: flex; flex-wrap: wrap; justify-content: center;
-  }
-  .step {
-    flex: 1; min-width: 200px; max-width: 260px;
-    text-align: center; padding: 36px 20px; position: relative;
-  }
-  .step:not(:last-child)::after {
-    content: '←';
-    position: absolute; left: 0; top: 42%;
-    font-size: 1.6rem; color: var(--gold); opacity: 0.35;
-  }
-  .step-num {
-    width: 60px; height: 60px; border-radius: 50%;
-    background: linear-gradient(135deg, #8B1515, #E8242B, #FF6B6B);
-    color: #fff; font-size: 1.4rem; font-weight: 900;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 18px;
-    box-shadow: 0 8px 30px rgba(232,36,43,0.4), 0 0 0 6px rgba(232,36,43,0.08);
-  }
-  .step-title { font-size: 1rem; font-weight: 800; margin-bottom: 8px; }
-  .step-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.7; }
-
-  .cta-section {
-    position: relative; overflow: hidden;
-    background: linear-gradient(135deg, #120800 0%, #0C0500 50%, #180900 100%);
-    border-top: 1px solid rgba(245,197,24,0.1);
-    border-bottom: 1px solid rgba(245,197,24,0.1);
-    text-align: center; padding: 100px 5%;
-    z-index: 1;
-  }
-  .cta-section::before {
-    content: '';
-    position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
-    width: 600px; height: 600px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(232,36,43,0.07), transparent 60%);
-    pointer-events: none;
-  }
-  .cta-section::after {
-    content: '';
-    position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.5), rgba(232,36,43,0.3), transparent);
-  }
-  .cta-section h2 { font-size: clamp(1.8rem, 3.5vw, 3rem); font-weight: 900; margin-bottom: 18px; position: relative; }
-  .cta-section p { color: var(--muted); font-size: 1rem; margin-bottom: 44px; line-height: 1.8; position: relative; }
-
-  .contact-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-    gap: 20px; max-width: 920px; margin: 0 auto;
-  }
-  .contact-card {
-    background: linear-gradient(145deg, #1A1208, #120D04);
-    border: 1px solid rgba(245,197,24,0.08);
-    border-radius: 20px; padding: 30px 26px;
-    display: flex; gap: 18px; align-items: flex-start;
-    transition: border-color 0.3s, transform 0.35s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s;
-  }
-  .contact-card:hover {
-    border-color: rgba(245,197,24,0.35);
-    transform: translateY(-6px);
-    box-shadow: 0 20px 55px rgba(0,0,0,0.5), 0 0 30px rgba(245,197,24,0.1);
-  }
-  .contact-icon-wrap {
-    width: 54px; height: 54px; border-radius: 15px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 26px;
-  }
-  .contact-type { font-size: 0.7rem; color: var(--muted); margin-bottom: 6px; }
-  .contact-value { font-size: 1.05rem; font-weight: 700; color: var(--gold-light); margin-bottom: 14px; }
-  .contact-btn {
-    display: inline-flex; align-items: center; gap: 7px;
-    padding: 10px 22px; border-radius: 10px;
-    font-weight: 800; font-size: 0.84rem; text-decoration: none;
-    font-family: inherit; position: relative; overflow: hidden;
-    transition: all 0.3s cubic-bezier(.22,.68,0,1.2);
-    cursor: pointer;
-  }
-
-  footer {
-    position: relative; z-index: 1;
-    text-align: center; padding: 48px 5%;
-    border-top: 1px solid rgba(245,197,24,0.1);
-  }
-  footer::before {
-    content: ''; position: absolute; top: 0; left: 15%; right: 15%; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.35), rgba(232,36,43,0.2), transparent);
-  }
-  .footer-logo {
-    font-size: 1.6rem; font-weight: 900; margin-bottom: 12px;
-    display: inline-flex; align-items: center; gap: 10px;
-  }
-  .footer-tagline { color: var(--muted); font-size: 0.82rem; line-height: 1.6; }
-  .footer-divider {
-    width: 40px; height: 2px; margin: 16px auto;
-    background: linear-gradient(90deg, #E8242B, #F5C518);
-    border-radius: 2px;
-  }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(36px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .reveal {
-    opacity: 0; transform: translateY(30px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
-  }
-  .reveal.visible { opacity: 1; transform: translateY(0); }
-
-  @media (max-width: 768px) {
-    .nav-links { display: none; }
-    .step::after { display: none; }
-  }
+@media(max-width:400px){
+  .hero-title{font-size:1.9rem}
+  .skills-grid{grid-template-columns:repeat(3,1fr)}
+  nav{padding:.8rem 1rem}
+}
 </style>
 </head>
 <body>
 
-<div class="bg-canvas">
-  <div class="bg-blob bg-blob-1"></div>
-  <div class="bg-blob bg-blob-2"></div>
-  <div class="bg-blob bg-blob-3"></div>
-  <div class="bg-grid"></div>
-  <div class="bg-noise"></div>
-  <div class="bg-scan"></div>
-  <canvas id="cvs-circuit" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.18;pointer-events:none;"></canvas>
-  <canvas id="cvs-particles" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.55;pointer-events:none;"></canvas>
-  <canvas id="cvs-matrix" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.12;pointer-events:none;"></canvas>
-</div>
+<canvas id="bgCanvas"></canvas>
+<div class="cursor" id="cur"></div>
+<div class="cursor-ring" id="ring"></div>
 
+<!-- NAV -->
 <nav>
-  <a href="#" class="logo">
-    <div class="logo-icon">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-        <circle cx="14" cy="14" r="5" fill="#F5C518"/>
-        <line x1="14" y1="2" x2="14" y2="6.5" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="14" y1="21.5" x2="14" y2="26" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="2" y1="14" x2="6.5" y2="14" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="21.5" y1="14" x2="26" y2="14" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="5.2" y1="5.2" x2="8.4" y2="8.4" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="22.8" y1="5.2" x2="19.6" y2="8.4" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="5.2" y1="22.8" x2="8.4" y2="19.6" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-        <line x1="22.8" y1="22.8" x2="19.6" y2="19.6" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-      </svg>
-    </div>
-    <div>
-      <div class="logo-wordmark"><span class="k-red">K</span><span class="k-white">urdost</span></div>
-      <div class="logo-sub">خزمەتگوزاری تەکنەلۆژی</div>
-    </div>
-  </a>
+  <div class="nav-logo">DEV.KRD</div>
   <ul class="nav-links">
-    <li><a href="#products">بەرهەمەکان</a></li>
-    <li><a href="#features">تایبەتمەندیەکان</a></li>
-    <li><a href="#process">ئامادەکاری</a></li>
-    <li><a href="#contact" class="nav-cta">پەیوەندیم پێوە بکە</a></li>
+    <li><a href="#skills">شیاوییەکانم</a></li>
+    <li><a href="#projects">پرۆژەکانم</a></li>
+    <li><a href="#services">خزمەتگوزاریەکان</a></li>
+    <li><a href="#contact">پەیوەندی</a></li>
   </ul>
+  <button class="hamburger" id="ham" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
 
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#skills" onclick="closeMenu()">شیاوییەکانم</a>
+  <a href="#projects" onclick="closeMenu()">پرۆژەکانم</a>
+  <a href="#services" onclick="closeMenu()">خزمەتگوزاریەکان</a>
+  <a href="#contact" onclick="closeMenu()">پەیوەندی</a>
+</div>
+
+<!-- HERO -->
 <section class="hero">
   <div class="hero-glow"></div>
-  <div class="badge">
-    <div class="badge-dot"></div>
-    Kurdost · نووسەری سیستەمی پرۆفیشناڵ · مەودای ٢٥+ ساڵ
+  <div class="hero-inner">
+    <div class="badge"><span class="badge-dot"></span>بەرنامەسازی پیشەیی</div>
+    <h1 class="hero-title">
+      <span class="line1">ئامادەین بۆ دروست کردنی</span>
+      <span class="line2">ئەپڵیکەیشن و وێبسایت</span>
+      <span class="line3">بۆ پرۆژەکانی تۆ</span>
+    </h1>
+    <p class="hero-sub">من پسپۆڕم لە دروستکردنی چارەسەری دیجیتاڵی بۆ کارو پرۆژەکانتان. لە ئایدیا هەتا ئەنجامدان — من لەگەڵتانم.</p>
+    <div class="hero-btns">
+      <a href="#projects" class="btn btn-glow">🚀 پرۆژەکانم ببینە</a>
+      <a href="https://wa.me/9640708239253" target="_blank" class="btn btn-wa">💬 واتساپ — پەیوەندی بکە</a>
+      <a href="#contact" class="btn btn-ghost">📞 ژمارەکانم</a>
+    </div>
   </div>
-  <h1>
-    <span class="h1-gold">خزمەتگوزاری تەکنەلۆژی</span>
-    <span class="h1-sub-line">Technology Services · خدمات تقنية احترافية</span>
-  </h1>
-  <p class="hero-sub">
-    لەگەڵ ئێمە ببە بە خاوەنی سیستەم و ئەپڵیکەیشنی خۆت<br>
-    با <strong>Kurdost</strong> پیشەنگی کارەکانت بێت
-  </p>
-  <div class="hero-btns">
-    <a href="#contact" class="btn-primary">🚀 دەستپێبکە ئێستا</a>
-    <a href="#products" class="btn-secondary">بینینی بەرهەمەکان</a>
+  <div class="scroll-line">
+    <div class="scroll-track"><div class="scroll-fill"></div></div>
+    <span>دابەزە</span>
   </div>
 </section>
 
+<div class="h-line"></div>
+
+<!-- STATS -->
 <div class="stats-bar">
-  <div class="stat-item">
-    <div class="stat-num">٢٥٠+</div>
-    <div class="stat-label">موشتەری کامیاب · عميل ناجح</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-num">١٢</div>
-    <div class="stat-label">جۆری سیستەم · نوع نظام</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-num">٩٩٪</div>
-    <div class="stat-label">ڕەزامەندی موشتەری · رضا العميل</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-num">٢٤/٧</div>
-    <div class="stat-label">پشتیوانی تەکنیکی · دعم فني</div>
-  </div>
+  <div class="stat reveal"><div class="stat-n">٥٠+</div><div class="stat-l">پرۆژەی تەواوکراو</div></div>
+  <div class="stat reveal"><div class="stat-n">٣+</div><div class="stat-l">ساڵی ئەزموون</div></div>
+  <div class="stat reveal"><div class="stat-n">٣٠+</div><div class="stat-l">کڕیاری دڵخۆش</div></div>
+  <div class="stat reveal"><div class="stat-n">١٠٠٪</div><div class="stat-l">پابەندی بە ماوەکە</div></div>
 </div>
 
-<section id="products">
-  <div class="section-header reveal">
-    <div class="section-tag">بەرهەمەکانمان · منتجاتنا</div>
-    <h2 class="section-title">سیستەمەکانمان</h2>
-    <p class="section-sub">هەر سیستەمێک بۆ پێداویستیت دروست دەکرێت — یەکلایی و بەئەندازە</p>
-  </div>
-  <div class="products-grid">
+<div class="h-line"></div>
 
-    <div class="product-card reveal">
-      <div class="card-badge">نویترین</div>
-      <div class="card-mockup" style="background:#080600;height:230px;padding:0;align-items:stretch;">
-        <div style="display:flex;width:100%;height:100%;font-family:'Noto Kufi Arabic',sans-serif;overflow:hidden;">
-          <div style="width:80px;background:#050400;border-left:1px solid rgba(245,197,24,0.1);padding:8px 0;display:flex;flex-direction:column;gap:1px;flex-shrink:0;">
-            <div style="padding:5px 8px;background:rgba(245,197,24,0.12);border-right:2px solid #F5C518;color:#FFE066;font-size:8.5px;">📦 ئەمبار</div>
-            <div style="padding:5px 8px;color:#4A3A1A;font-size:8.5px;">💰 ژمێریاری</div>
-            <div style="padding:5px 8px;color:#4A3A1A;font-size:8.5px;">🛒 فرۆشتن</div>
-            <div style="padding:5px 8px;color:#4A3A1A;font-size:8.5px;">📊 ڕاپۆرت</div>
-            <div style="padding:5px 8px;color:#4A3A1A;font-size:8.5px;">⚙️ ڕێکخستن</div>
-          </div>
-          <div style="flex:1;padding:8px;display:flex;flex-direction:column;gap:5px;overflow:hidden;">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
-              <div style="background:rgba(245,197,24,0.07);border:1px solid rgba(245,197,24,0.18);border-radius:5px;padding:5px;text-align:center;">
-                <div style="color:#F5C518;font-size:11px;font-weight:900;">١٤٨</div>
-                <div style="color:#5A4A2A;font-size:7.5px;margin-top:1px;">کاڵای ئەمبار</div>
-              </div>
-              <div style="background:rgba(232,36,43,0.07);border:1px solid rgba(232,36,43,0.18);border-radius:5px;padding:5px;text-align:center;">
-                <div style="color:#E8242B;font-size:11px;font-weight:900;">٣٢</div>
-                <div style="color:#5A4A2A;font-size:7.5px;margin-top:1px;">کاڵای کەم</div>
-              </div>
-              <div style="background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.18);border-radius:5px;padding:5px;text-align:center;">
-                <div style="color:#4ADE80;font-size:11px;font-weight:900;">٥٬٢٠٠$</div>
-                <div style="color:#5A4A2A;font-size:7.5px;margin-top:1px;">فرۆشتنی ئەمڕۆ</div>
-              </div>
-            </div>
-            <div style="background:rgba(245,197,24,0.04);border:1px solid rgba(245,197,24,0.08);border-radius:5px;overflow:hidden;flex:1;">
-              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;background:rgba(245,197,24,0.08);padding:4px 6px;">
-                <div style="color:#F5C518;font-size:8px;">ناوی کاڵا</div>
-                <div style="color:#F5C518;font-size:8px;text-align:center;">بڕ</div>
-                <div style="color:#F5C518;font-size:8px;text-align:center;">نرخ</div>
-              </div>
-              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.03);">
-                <div style="color:#B8A878;font-size:7.5px;">ئامێری کۆمپیوتەر</div>
-                <div style="color:#B8A878;font-size:7.5px;text-align:center;">٤٥</div>
-                <div style="color:#4ADE80;font-size:7.5px;text-align:center;">١٢٠$</div>
-              </div>
-              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.03);background:rgba(245,197,24,0.02);">
-                <div style="color:#B8A878;font-size:7.5px;">مۆبایل Samsung</div>
-                <div style="color:#E8242B;font-size:7.5px;text-align:center;">٣</div>
-                <div style="color:#4ADE80;font-size:7.5px;text-align:center;">٣٥٠$</div>
-              </div>
-              <div style="display:grid;grid-template-columns:2fr 1fr 1fr;padding:4px 6px;">
-                <div style="color:#B8A878;font-size:7.5px;">پرینتەر Epson</div>
-                <div style="color:#B8A878;font-size:7.5px;text-align:center;">١٢</div>
-                <div style="color:#4ADE80;font-size:7.5px;text-align:center;">٨٥$</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="card-icon" style="background:rgba(232,36,43,0.15);">🏢</div>
-        <div class="card-title">سیستەمی ERP — بەڕێوەبردنی کاروبار</div>
-        <div class="card-desc">کنترۆڵی تەواوی کاروبارت — ئەمبار، فرۆشتن، کڕین، ژمێریاری و ڕاپۆرتی زیرەکانە لە یەک شوێن</div>
-        <div class="card-tags">
-          <span class="tag gold">ئەمبار</span>
-          <span class="tag gold">ژمێریاری</span>
-          <span class="tag">فرۆشتن</span>
-          <span class="tag">ڕاپۆرت</span>
-        </div>
-      </div>
+<!-- SKILLS -->
+<section id="skills">
+  <div class="skills-wrap">
+    <div class="skills-head reveal">
+      <div class="sec-label">شیاوییەکانم</div>
+      <h2 class="sec-title">تەکنەلۆژیاکانی <span style="background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">کارەکەم</span></h2>
+      <p class="sec-sub">من بە تەکنەلۆژیا و زمانەکانی بەرنامەسازی ناوبراو کار دەکەم</p>
     </div>
-
-    <div class="product-card reveal">
-      <div class="card-mockup" style="background:#080500;height:230px;padding:0;align-items:stretch;">
-        <div style="display:flex;width:100%;height:100%;font-family:'Noto Kufi Arabic',sans-serif;overflow:hidden;">
-          <div style="flex:1;padding:8px;display:flex;flex-direction:column;gap:5px;overflow:hidden;">
-            <div style="color:#F5C518;font-size:8px;font-weight:700;border-bottom:1px solid rgba(245,197,24,0.12);padding-bottom:3px;">🛒 بارکردنی کاڵا</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
-              <div style="background:rgba(232,36,43,0.1);border:1px solid rgba(232,36,43,0.2);border-radius:5px;padding:5px;text-align:center;">
-                <div style="font-size:14px;">🥤</div>
-                <div style="color:#C8A868;font-size:7px;margin-top:2px;">نووشتنی</div>
-                <div style="color:#4ADE80;font-size:7px;">١٫٥$</div>
-              </div>
-              <div style="background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.15);border-radius:5px;padding:5px;text-align:center;">
-                <div style="font-size:14px;">🍕</div>
-                <div style="color:#C8A868;font-size:7px;margin-top:2px;">خواردن</div>
-                <div style="color:#4ADE80;font-size:7px;">٨$</div>
-              </div>
-              <div style="background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.12);border-radius:5px;padding:5px;text-align:center;">
-                <div style="font-size:14px;">🧴</div>
-                <div style="color:#C8A868;font-size:7px;margin-top:2px;">شووکردن</div>
-                <div style="color:#4ADE80;font-size:7px;">٣$</div>
-              </div>
-            </div>
-            <div style="background:rgba(245,197,24,0.04);border:1px solid rgba(245,197,24,0.08);border-radius:5px;flex:1;padding:5px;display:flex;flex-direction:column;gap:3px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div style="color:#B8A878;font-size:7.5px;">نووشتنی ×٢</div>
-                <div style="color:#F5C518;font-size:7.5px;">٣$</div>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div style="color:#B8A878;font-size:7.5px;">خواردن ×١</div>
-                <div style="color:#F5C518;font-size:7.5px;">٨$</div>
-              </div>
-              <div style="height:1px;background:rgba(245,197,24,0.1);margin:2px 0;"></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto;">
-                <div style="color:#FFE066;font-size:8px;font-weight:700;">کۆی گشتی</div>
-                <div style="color:#4ADE80;font-size:9px;font-weight:900;">١١$</div>
-              </div>
-              <div style="background:linear-gradient(90deg,#E8242B,#c01820);border-radius:4px;padding:4px;text-align:center;color:#fff;font-size:7.5px;font-weight:700;margin-top:2px;">✓ پارەدان</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="card-icon" style="background:rgba(245,197,24,0.15);">🛒</div>
-        <div class="card-title">سیستەمی فرۆشگا — خاڵی فرۆشتن POS</div>
-        <div class="card-desc">سیستەمی فرۆشگای خێرا و ئاسان، بارکۆد، پسوولە چاپکردن، ستۆک و ڕاپۆرتی ڕۆژانە</div>
-        <div class="card-tags">
-          <span class="tag gold">فرۆشتنی خێرا</span>
-          <span class="tag">بارکۆد</span>
-          <span class="tag">پسوولە</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="product-card reveal">
-      <div class="card-mockup" style="background:#080404;height:230px;padding:0;align-items:stretch;">
-        <div style="width:100%;height:100%;font-family:'Noto Kufi Arabic',sans-serif;overflow:hidden;padding:8px;display:flex;flex-direction:column;gap:5px;">
-          <div style="color:#F5C518;font-size:8px;font-weight:700;border-bottom:1px solid rgba(245,197,24,0.12);padding-bottom:3px;">👥 لیستی کارمەندان</div>
-          <div style="background:rgba(245,197,24,0.04);border:1px solid rgba(245,197,24,0.08);border-radius:5px;overflow:hidden;">
-            <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;background:rgba(245,197,24,0.08);padding:4px 6px;">
-              <div style="color:#F5C518;font-size:7.5px;">ناو</div>
-              <div style="color:#F5C518;font-size:7.5px;">پۆست</div>
-              <div style="color:#F5C518;font-size:7.5px;">مووچە</div>
-              <div style="color:#F5C518;font-size:7.5px;">دەرەجە</div>
-            </div>
-            <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.03);align-items:center;">
-              <div style="display:flex;align-items:center;gap:3px;"><div style="width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#E8242B,#8B1515);display:flex;align-items:center;justify-content:center;font-size:8px;">ئ</div><div style="color:#B8A878;font-size:7.5px;">ئارام</div></div>
-              <div style="color:#B8A878;font-size:7px;">بەڕێوەبەر</div>
-              <div style="color:#4ADE80;font-size:7.5px;">٨٠٠$</div>
-              <div style="background:rgba(74,222,128,0.15);border-radius:3px;padding:1px 4px;color:#4ADE80;font-size:7px;text-align:center;">چالاک</div>
-            </div>
-            <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.03);align-items:center;background:rgba(245,197,24,0.02);">
-              <div style="display:flex;align-items:center;gap:3px;"><div style="width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#1E3A8A);display:flex;align-items:center;justify-content:center;font-size:8px;">س</div><div style="color:#B8A878;font-size:7.5px;">سارا</div></div>
-              <div style="color:#B8A878;font-size:7px;">ژمێریار</div>
-              <div style="color:#4ADE80;font-size:7.5px;">٦٥٠$</div>
-              <div style="background:rgba(74,222,128,0.15);border-radius:3px;padding:1px 4px;color:#4ADE80;font-size:7px;text-align:center;">چالاک</div>
-            </div>
-            <div style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;padding:4px 6px;align-items:center;">
-              <div style="display:flex;align-items:center;gap:3px;"><div style="width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#B8860B,#7a5500);display:flex;align-items:center;justify-content:center;font-size:8px;">ک</div><div style="color:#B8A878;font-size:7.5px;">کارزان</div></div>
-              <div style="color:#B8A878;font-size:7px;">فرۆشتن</div>
-              <div style="color:#4ADE80;font-size:7.5px;">٥٠٠$</div>
-              <div style="background:rgba(245,197,24,0.15);border-radius:3px;padding:1px 4px;color:#F5C518;font-size:7px;text-align:center;">مۆڵەت</div>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:auto;">
-            <div style="background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.15);border-radius:5px;padding:5px;text-align:center;">
-              <div style="color:#4ADE80;font-size:11px;font-weight:900;">١٨</div>
-              <div style="color:#4A3A1A;font-size:7px;">کارمەندی چالاک</div>
-            </div>
-            <div style="background:rgba(245,197,24,0.07);border:1px solid rgba(245,197,24,0.15);border-radius:5px;padding:5px;text-align:center;">
-              <div style="color:#F5C518;font-size:11px;font-weight:900;">١٢٬٥٠٠$</div>
-              <div style="color:#4A3A1A;font-size:7px;">کۆی مووچەکان</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="card-icon" style="background:rgba(124,58,237,0.15);">👥</div>
-        <div class="card-title">سیستەمی HR — بەڕێوەبردنی کارمەندان</div>
-        <div class="card-desc">تۆماری کارمەند، مووچە، مۆڵەت، سزا، ئامانەی کات و ڕاپۆرتی تەواو بۆ بەڕێوەبردنی ئادامیانی</div>
-        <div class="card-tags">
-          <span class="tag gold">مووچە</span>
-          <span class="tag">ئامانە</span>
-          <span class="tag">مۆڵەت</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="product-card reveal">
-      <div class="card-mockup" style="background:#060504;height:230px;padding:0;align-items:stretch;">
-        <div style="width:100%;height:100%;font-family:'Noto Kufi Arabic',sans-serif;overflow:hidden;display:flex;flex-direction:column;">
-          <div style="height:18px;background:#040300;display:flex;align-items:center;padding:0 8px;gap:4px;border-bottom:1px solid rgba(245,197,24,0.08);flex-shrink:0;">
-            <div style="width:6px;height:6px;border-radius:50%;background:#FF5F57;"></div>
-            <div style="width:6px;height:6px;border-radius:50%;background:#FEBC2E;"></div>
-            <div style="width:6px;height:6px;border-radius:50%;background:#28C840;"></div>
-            <div style="flex:1;height:9px;background:rgba(245,197,24,0.07);border-radius:3px;margin:0 6px;"></div>
-          </div>
-          <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
-            <div style="background:linear-gradient(135deg,rgba(232,36,43,0.3),rgba(245,197,24,0.2));padding:10px 10px 8px;display:flex;flex-direction:column;gap:4px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <div style="color:#FFE066;font-size:9px;font-weight:900;">🌟 کۆمپانیاکەمان</div>
-                <div style="display:flex;gap:6px;">
-                  <div style="color:#C8A868;font-size:7px;">مەرجەکان</div>
-                  <div style="color:#C8A868;font-size:7px;">پەیوەندی</div>
-                </div>
-              </div>
-              <div style="color:#9A8A6A;font-size:7.5px;">بەهترین خزمەتگوزاری بۆ کارەکەت</div>
-              <div style="display:flex;gap:5px;margin-top:2px;">
-                <div style="background:rgba(245,197,24,0.25);border:1px solid rgba(245,197,24,0.4);border-radius:3px;padding:3px 8px;color:#FFE066;font-size:7px;">دەستپێبکە</div>
-                <div style="background:rgba(232,36,43,0.15);border:1px solid rgba(232,36,43,0.3);border-radius:3px;padding:3px 8px;color:#FFB8BA;font-size:7px;">زیاتر بزانە</div>
-              </div>
-            </div>
-            <div style="padding:6px 8px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;flex:1;">
-              <div style="background:rgba(245,197,24,0.05);border:1px solid rgba(245,197,24,0.1);border-radius:5px;padding:6px;display:flex;flex-direction:column;gap:3px;">
-                <div style="font-size:13px;text-align:center;">🚀</div>
-                <div style="color:#FFE066;font-size:7px;text-align:center;font-weight:700;">خێرا</div>
-                <div style="color:#4A3A1A;font-size:6.5px;text-align:center;">بارکردنی خێرا</div>
-              </div>
-              <div style="background:rgba(232,36,43,0.05);border:1px solid rgba(232,36,43,0.1);border-radius:5px;padding:6px;display:flex;flex-direction:column;gap:3px;">
-                <div style="font-size:13px;text-align:center;">🔒</div>
-                <div style="color:#FFB8BA;font-size:7px;text-align:center;font-weight:700;">ئەمن</div>
-                <div style="color:#4A3A1A;font-size:6.5px;text-align:center;">پارێزراو</div>
-              </div>
-              <div style="background:rgba(74,222,128,0.04);border:1px solid rgba(74,222,128,0.1);border-radius:5px;padding:6px;display:flex;flex-direction:column;gap:3px;">
-                <div style="font-size:13px;text-align:center;">📱</div>
-                <div style="color:#4ADE80;font-size:7px;text-align:center;font-weight:700;">مۆبایل</div>
-                <div style="color:#4A3A1A;font-size:6.5px;text-align:center;">هەر ئامێرێک</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="card-icon" style="background:rgba(232,36,43,0.15);">🌐</div>
-        <div class="card-title">دروستکردنی ماڵپەڕ — ئینترنێت</div>
-        <div class="card-desc">ماڵپەڕی ڕووکاری جوان، خێرا، و گونجاو بۆ هەموو ئامێرێک — دیزاینی میۆدێرن و SEO</div>
-        <div class="card-tags">
-          <span class="tag gold">دیزاینی موودێرن</span>
-          <span class="tag">خێرا</span>
-          <span class="tag">SEO</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="product-card reveal">
-      <div class="card-mockup" style="background:#080600;height:230px;padding:0;">
-        <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
-          <div style="width:105px;height:195px;background:#060400;border-radius:18px;border:2px solid rgba(245,197,24,0.35);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.6);">
-            <div style="height:12px;background:#040300;display:flex;justify-content:center;align-items:flex-end;padding-bottom:2px;flex-shrink:0;">
-              <div style="width:26px;height:5px;background:#1A1005;border-radius:0 0 5px 5px;"></div>
-            </div>
-            <div style="flex:1;background:#0A0700;padding:5px;display:flex;flex-direction:column;gap:4px;font-family:'Noto Kufi Arabic',sans-serif;overflow:hidden;">
-              <div style="background:linear-gradient(90deg,#B8860B,#F5C518);border-radius:4px;padding:4px 6px;display:flex;justify-content:space-between;align-items:center;">
-                <div style="color:#0A0700;font-size:7.5px;font-weight:900;">📊 داشبۆرد</div>
-                <div style="color:#0A0700;font-size:7px;">🔔</div>
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;">
-                <div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:4px;padding:4px;text-align:center;">
-                  <div style="color:#4ADE80;font-size:9px;font-weight:900;">٢٤</div>
-                  <div style="color:#4A3A1A;font-size:6px;">فرۆشتن</div>
-                </div>
-                <div style="background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.15);border-radius:4px;padding:4px;text-align:center;">
-                  <div style="color:#F5C518;font-size:9px;font-weight:900;">٣٢٠$</div>
-                  <div style="color:#4A3A1A;font-size:6px;">داهات</div>
-                </div>
-              </div>
-              <div style="background:rgba(245,197,24,0.04);border:1px solid rgba(245,197,24,0.08);border-radius:4px;padding:4px;display:flex;flex-direction:column;gap:2px;">
-                <div style="color:#F5C518;font-size:6.5px;font-weight:700;margin-bottom:1px;">داهاتی هەفتانە</div>
-                <div style="display:flex;align-items:flex-end;gap:2px;height:22px;">
-                  <div style="flex:1;background:#E8242B;border-radius:1px 1px 0 0;height:40%;"></div>
-                  <div style="flex:1;background:#B8860B;border-radius:1px 1px 0 0;height:65%;"></div>
-                  <div style="flex:1;background:#E8242B;border-radius:1px 1px 0 0;height:50%;"></div>
-                  <div style="flex:1;background:#F5C518;border-radius:1px 1px 0 0;height:90%;"></div>
-                  <div style="flex:1;background:#B8860B;border-radius:1px 1px 0 0;height:70%;"></div>
-                  <div style="flex:1;background:#E8242B;border-radius:1px 1px 0 0;height:55%;"></div>
-                  <div style="flex:1;background:#F5C518;border-radius:1px 1px 0 0;height:80%;"></div>
-                </div>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:2px;margin-top:auto;">
-                <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.03);border-radius:3px;padding:3px 4px;">
-                  <div style="color:#B8A878;font-size:6.5px;">ئامێری کۆمپیوتەر</div>
-                  <div style="color:#4ADE80;font-size:6.5px;">+١٢٠$</div>
-                </div>
-                <div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.03);border-radius:3px;padding:3px 4px;">
-                  <div style="color:#B8A878;font-size:6.5px;">مۆبایل Samsung</div>
-                  <div style="color:#4ADE80;font-size:6.5px;">+٣٥٠$</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="card-icon" style="background:rgba(201,168,76,0.15);">📱</div>
-        <div class="card-title">ئەپڵیکەیشنی مۆبایل — iOS & Android</div>
-        <div class="card-desc">ئەپڵیکەیشنی تایبەتی بۆ کارەکەت، خوارزەری کار لە مۆبایلەوە بەئاسانی و خێرایی</div>
-        <div class="card-tags">
-          <span class="tag gold">iOS & Android</span>
-          <span class="tag">UI/UX جوان</span>
-          <span class="tag">ئۆفلاین</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="product-card reveal">
-      <div class="card-mockup" style="background:#060500;height:230px;padding:0;align-items:stretch;">
-        <div style="width:100%;height:100%;font-family:'Noto Kufi Arabic',sans-serif;overflow:hidden;padding:8px;display:flex;flex-direction:column;gap:5px;">
-          <div style="color:#F5C518;font-size:8px;font-weight:700;border-bottom:1px solid rgba(245,197,24,0.12);padding-bottom:3px;">📊 ژمێریاری — ئەمڕۆ</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
-            <div style="background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.18);border-radius:5px;padding:5px;text-align:center;">
-              <div style="color:#4ADE80;font-size:10px;font-weight:900;">١٥٬٢٠٠$</div>
-              <div style="color:#3A4A3A;font-size:7px;margin-top:1px;">داهات</div>
-            </div>
-            <div style="background:rgba(232,36,43,0.07);border:1px solid rgba(232,36,43,0.18);border-radius:5px;padding:5px;text-align:center;">
-              <div style="color:#E8242B;font-size:10px;font-weight:900;">٨٬٤٠٠$</div>
-              <div style="color:#4A3A1A;font-size:7px;margin-top:1px;">خەرجی</div>
-            </div>
-            <div style="background:rgba(245,197,24,0.07);border:1px solid rgba(245,197,24,0.18);border-radius:5px;padding:5px;text-align:center;">
-              <div style="color:#F5C518;font-size:10px;font-weight:900;">٦٬٨٠٠$</div>
-              <div style="color:#4A3A1A;font-size:7px;margin-top:1px;">قازانج</div>
-            </div>
-          </div>
-          <div style="background:rgba(245,197,24,0.04);border:1px solid rgba(245,197,24,0.08);border-radius:5px;overflow:hidden;">
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:rgba(245,197,24,0.08);padding:3px 6px;">
-              <div style="color:#F5C518;font-size:7.5px;">پسوولە</div>
-              <div style="color:#F5C518;font-size:7.5px;">بڕ</div>
-              <div style="color:#F5C518;font-size:7.5px;">جۆر</div>
-              <div style="color:#F5C518;font-size:7.5px;">دەرەجە</div>
-            </div>
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:3px 6px;border-bottom:1px solid rgba(255,255,255,0.03);">
-              <div style="color:#B8A878;font-size:7px;">#١٠٢٤</div>
-              <div style="color:#4ADE80;font-size:7px;">٥٠٠$</div>
-              <div style="color:#B8A878;font-size:7px;">داهات</div>
-              <div style="background:rgba(74,222,128,0.12);border-radius:2px;padding:1px 3px;color:#4ADE80;font-size:6.5px;text-align:center;">پارەدرا</div>
-            </div>
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:3px 6px;border-bottom:1px solid rgba(255,255,255,0.03);background:rgba(245,197,24,0.02);">
-              <div style="color:#B8A878;font-size:7px;">#١٠٢٥</div>
-              <div style="color:#E8242B;font-size:7px;">٢٠٠$</div>
-              <div style="color:#B8A878;font-size:7px;">خەرجی</div>
-              <div style="background:rgba(74,222,128,0.12);border-radius:2px;padding:1px 3px;color:#4ADE80;font-size:6.5px;text-align:center;">پارەدرا</div>
-            </div>
-            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:3px 6px;">
-              <div style="color:#B8A878;font-size:7px;">#١٠٢٦</div>
-              <div style="color:#4ADE80;font-size:7px;">٨٠٠$</div>
-              <div style="color:#B8A878;font-size:7px;">داهات</div>
-              <div style="background:rgba(245,197,24,0.12);border-radius:2px;padding:1px 3px;color:#F5C518;font-size:6.5px;text-align:center;">چاوەڕێ</div>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:auto;">
-            <div style="position:relative;width:40px;height:40px;flex-shrink:0;">
-              <svg viewBox="0 0 36 36" style="width:40px;height:40px;transform:rotate(-90deg);">
-                <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(245,197,24,0.1)" stroke-width="4"/>
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#4ADE80" stroke-width="4" stroke-dasharray="52 36" stroke-linecap="round"/>
-                <circle cx="18" cy="18" r="14" fill="none" stroke="#E8242B" stroke-width="4" stroke-dasharray="36 52" stroke-dashoffset="-52" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:2px;flex:1;">
-              <div style="display:flex;align-items:center;gap:4px;"><div style="width:7px;height:7px;border-radius:50%;background:#4ADE80;flex-shrink:0;"></div><div style="color:#B8A878;font-size:7px;">داهات ٦٠٪</div></div>
-              <div style="display:flex;align-items:center;gap:4px;"><div style="width:7px;height:7px;border-radius:50%;background:#E8242B;flex-shrink:0;"></div><div style="color:#B8A878;font-size:7px;">خەرجی ٤٠٪</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="card-icon" style="background:rgba(245,197,24,0.15);">📊</div>
-        <div class="card-title">سیستەمی ژمێریاری — سیستەمی ئەکاونتینگ</div>
-        <div class="card-desc">ژمێریاری گشتی، پسوولە و فاکتورا، باڵانسی بانک، دیون، ماف و ڕاپۆرتی دارایی</div>
-        <div class="card-tags">
-          <span class="tag gold">فاکتورا</span>
-          <span class="tag">باڵانس</span>
-          <span class="tag">ڕاپۆرت</span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-<section id="features" style="background: rgba(22,14,4,0.7); padding:80px 5%;">
-  <div class="section-header reveal">
-    <div class="section-tag">بەتایبەتمەندی · المميزات</div>
-    <h2 class="section-title">بۆچی ئێمە؟</h2>
-    <p class="section-sub">تایبەتمەندیەکان کە سیستەمەکانمان جیاوازی دێنێ</p>
-  </div>
-  <div class="features-grid">
-    <div class="feature-card reveal">
-      <div class="feature-icon">🔒</div>
-      <div class="feature-title">ئەمنی و پارێزراو</div>
-      <div class="feature-desc">داتاکەت بە رێگای ئینکریپشنی بەهێز پارێزراوە — هیچ مەترسییەک لە دەستدانی زانیاری نییە</div>
-    </div>
-    <div class="feature-card reveal">
-      <div class="feature-icon">⚡</div>
-      <div class="feature-title">خێرا و ئاسان</div>
-      <div class="feature-desc">کارکردن باشە، UI/UX گونجاو، هیچ خوێندنەوەی درێژخایەن پێویست نییە</div>
-    </div>
-    <div class="feature-card reveal">
-      <div class="feature-icon">📱</div>
-      <div class="feature-title">هەموو ئامێرەک</div>
-      <div class="feature-desc">لاپتۆپ، مۆبایل، تابلێت — هەر ئامێرێک بە تەواوی کار دەکات</div>
-    </div>
-    <div class="feature-card reveal">
-      <div class="feature-icon">🌍</div>
-      <div class="feature-title">کوردی و عەرەبی</div>
-      <div class="feature-desc">سیستەم بە زمانی کوردی سورانی و عەرەبی و ئینگلیزی دەکرێت — RTL تەواو</div>
-    </div>
-    <div class="feature-card reveal">
-      <div class="feature-icon">🔧</div>
-      <div class="feature-title">پشتیوانی بەردەوام</div>
-      <div class="feature-desc">تیمەکەمان ٢٤/٧ ئامادەی چارەسەرکردنی هەر کێشەیەک — بە کردارمەندی و خێرایی</div>
-    </div>
-    <div class="feature-card reveal">
-      <div class="feature-icon">📈</div>
-      <div class="feature-title">ڕاپۆرتی زیرەکانە</div>
-      <div class="feature-desc">ڕاپۆرت و داشبۆردی زیرەکانەی کار — بڕیاری باشتر بدە لەسەر بنەمای داتا</div>
+    <div class="skills-grid">
+      <div class="sk reveal"><span class="sk-icon">⚛️</span><div class="sk-name">React</div></div>
+      <div class="sk reveal"><span class="sk-icon">🟨</span><div class="sk-name">JavaScript</div></div>
+      <div class="sk reveal"><span class="sk-icon">🐍</span><div class="sk-name">Python</div></div>
+      <div class="sk reveal"><span class="sk-icon">🐘</span><div class="sk-name">PHP</div></div>
+      <div class="sk reveal"><span class="sk-icon">🗄️</span><div class="sk-name">MySQL</div></div>
+      <div class="sk reveal"><span class="sk-icon">🍃</span><div class="sk-name">MongoDB</div></div>
+      <div class="sk reveal"><span class="sk-icon">🎨</span><div class="sk-name">CSS / HTML</div></div>
+      <div class="sk reveal"><span class="sk-icon">📱</span><div class="sk-name">Flutter</div></div>
+      <div class="sk reveal"><span class="sk-icon">🖥️</span><div class="sk-name">Node.js</div></div>
+      <div class="sk reveal"><span class="sk-icon">🐳</span><div class="sk-name">Docker</div></div>
+      <div class="sk reveal"><span class="sk-icon">☁️</span><div class="sk-name">Cloud</div></div>
+      <div class="sk reveal"><span class="sk-icon">🔧</span><div class="sk-name">Git / GitHub</div></div>
     </div>
   </div>
 </section>
 
-<section id="process">
-  <div class="section-header reveal">
-    <div class="section-tag">پرۆسەی کار · خطوات العمل</div>
-    <h2 class="section-title">چۆن دەستپێدەکەین؟</h2>
-    <p class="section-sub">چوار هەنکاوی ئاسان بۆ دەستپێکردن بە سیستەمەکەت</p>
-  </div>
-  <div class="process-steps">
-    <div class="step reveal">
-      <div class="step-num">١</div>
-      <div class="step-title">پەیوەندی و تێبینی</div>
-      <div class="step-desc">پێوەندیمان پێوە بکە، پێداویستیەکانت ئەوەر بدە</div>
-    </div>
-    <div class="step reveal">
-      <div class="step-num">٢</div>
-      <div class="step-title">شیکاری و ئامادەکاری</div>
-      <div class="step-desc">تیمەکەمان شیکاری دەکات و پلانی کار دادەنێ</div>
-    </div>
-    <div class="step reveal">
-      <div class="step-num">٣</div>
-      <div class="step-title">دروستکردن و تاقیکردن</div>
-      <div class="step-desc">سیستەمەکە دروست دەکرێت و تاقی دەکرێتەوە</div>
-    </div>
-    <div class="step reveal">
-      <div class="step-num">٤</div>
-      <div class="step-title">تەسلیمکردن و پشتیوانی</div>
-      <div class="step-desc">تەسلیم و مامۆستایەتی و پشتیوانی بەردەوام</div>
+<div class="h-line"></div>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="projects-wrap">
+    <div class="projects-inner">
+      <div class="reveal">
+        <div class="sec-label">پرۆژەکانم</div>
+        <h2 class="sec-title">چەند <span style="background:linear-gradient(90deg,var(--c2),var(--c3));-webkit-background-clip:text;-webkit-text-fill-color:transparent">کاری</span> دەستپێکراوم</h2>
+        <p class="sec-sub">نموونەیەک لە پرۆژەکانی کراوەکانم</p>
+      </div>
+      <div class="proj-grid">
+        <!-- 1. فرۆشگای ئۆنلاین -->
+        <div class="proj reveal">
+          <div class="proj-thumb" style="background:#0d1b2a;padding:0;overflow:hidden">
+            <svg viewBox="0 0 340 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+              <rect width="340" height="180" fill="#0d1b2a"/>
+              <!-- navbar -->
+              <rect x="0" y="0" width="340" height="28" fill="#0a1628"/>
+              <circle cx="14" cy="14" r="4" fill="#6ee7f7"/>
+              <rect x="24" y="10" width="40" height="8" rx="2" fill="#1e3a5c"/>
+              <rect x="260" y="8" width="30" height="12" rx="3" fill="#6ee7f7" opacity=".9"/>
+              <rect x="300" y="8" width="30" height="12" rx="3" fill="#1e3a5c"/>
+              <!-- product cards -->
+              <rect x="8" y="36" width="90" height="90" rx="6" fill="#112240"/>
+              <rect x="18" y="46" width="70" height="45" rx="4" fill="#1e3a5c"/>
+              <rect x="22" y="54" width="30" height="28" rx="3" fill="#6ee7f7" opacity=".15"/>
+              <text x="37" y="74" font-size="14" text-anchor="middle" fill="#6ee7f7">👟</text>
+              <rect x="18" y="96" width="50" height="6" rx="2" fill="#cbd5e1" opacity=".7"/>
+              <rect x="18" y="107" width="30" height="5" rx="2" fill="#6ee7f7" opacity=".8"/>
+              <rect x="55" y="107" width="20" height="12" rx="3" fill="#6ee7f7" opacity=".9"/>
+              <!-- card 2 -->
+              <rect x="107" y="36" width="90" height="90" rx="6" fill="#112240"/>
+              <rect x="117" y="46" width="70" height="45" rx="4" fill="#1e3a5c"/>
+              <rect x="121" y="54" width="30" height="28" rx="3" fill="#a78bfa" opacity=".15"/>
+              <text x="136" y="74" font-size="14" text-anchor="middle" fill="#a78bfa">👜</text>
+              <rect x="117" y="96" width="50" height="6" rx="2" fill="#cbd5e1" opacity=".7"/>
+              <rect x="117" y="107" width="30" height="5" rx="2" fill="#a78bfa" opacity=".8"/>
+              <rect x="154" y="107" width="20" height="12" rx="3" fill="#a78bfa" opacity=".9"/>
+              <!-- card 3 -->
+              <rect x="206" y="36" width="90" height="90" rx="6" fill="#112240"/>
+              <rect x="216" y="46" width="70" height="45" rx="4" fill="#1e3a5c"/>
+              <rect x="220" y="54" width="30" height="28" rx="3" fill="#f472b6" opacity=".15"/>
+              <text x="235" y="74" font-size="14" text-anchor="middle" fill="#f472b6">⌚</text>
+              <rect x="216" y="96" width="50" height="6" rx="2" fill="#cbd5e1" opacity=".7"/>
+              <rect x="216" y="107" width="30" height="5" rx="2" fill="#f472b6" opacity=".8"/>
+              <rect x="253" y="107" width="20" height="12" rx="3" fill="#f472b6" opacity=".9"/>
+              <!-- cart badge -->
+              <rect x="8" y="135" width="324" height="36" rx="6" fill="#112240"/>
+              <rect x="16" y="143" width="60" height="20" rx="4" fill="#6ee7f7" opacity=".9"/>
+              <rect x="84" y="147" width="80" height="6" rx="2" fill="#1e3a5c"/>
+              <rect x="84" y="157" width="50" height="5" rx="2" fill="#1e3a5c"/>
+              <rect x="270" y="143" width="50" height="20" rx="4" fill="#1e3a5c"/>
+              <text x="295" y="157" font-size="9" text-anchor="middle" fill="#6ee7f7">3 items</text>
+            </svg>
+          </div>
+          <div class="proj-body">
+            <div class="proj-chips"><span class="chip">React</span><span class="chip">Node.js</span><span class="chip">MongoDB</span></div>
+            <div class="proj-name">فرۆشگای ئۆنلاین</div>
+            <div class="proj-desc">سیستەمی بازاڕی تەواو بە ئینتەرفەیسێکی ئاسان بۆ بەڕێوەبردنی کاڵاکان و فرۆشتن.</div>
+          </div>
+        </div>
+
+        <!-- 2. ئەپی مۆبایل -->
+        <div class="proj reveal">
+          <div class="proj-thumb" style="background:#0f0a1e;padding:0;overflow:hidden">
+            <svg viewBox="0 0 340 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+              <rect width="340" height="180" fill="#0f0a1e"/>
+              <!-- phone frame -->
+              <rect x="115" y="8" width="110" height="165" rx="14" fill="#1a0f35" stroke="#a78bfa" stroke-width="1.5" stroke-opacity=".4"/>
+              <rect x="145" y="14" width="50" height="6" rx="3" fill="#2d1f5e"/>
+              <!-- screen content -->
+              <rect x="122" y="26" width="96" height="140" rx="6" fill="#110a28"/>
+              <!-- profile -->
+              <circle cx="170" cy="48" r="14" fill="#3b1f6e"/>
+              <text x="170" y="53" font-size="13" text-anchor="middle" fill="#a78bfa">👤</text>
+              <rect x="148" y="66" width="44" height="5" rx="2" fill="#cbd5e1" opacity=".6"/>
+              <rect x="155" y="75" width="30" height="4" rx="2" fill="#a78bfa" opacity=".5"/>
+              <!-- stats row -->
+              <rect x="126" y="84" width="26" height="22" rx="4" fill="#1e1040"/>
+              <text x="139" y="98" font-size="9" text-anchor="middle" fill="#6ee7f7">12</text>
+              <rect x="157" y="84" width="26" height="22" rx="4" fill="#1e1040"/>
+              <text x="170" y="98" font-size="9" text-anchor="middle" fill="#a78bfa">4.9</text>
+              <rect x="188" y="84" width="26" height="22" rx="4" fill="#1e1040"/>
+              <text x="201" y="98" font-size="9" text-anchor="middle" fill="#f472b6">★</text>
+              <!-- menu items -->
+              <rect x="126" y="112" width="88" height="10" rx="3" fill="#1e1040"/>
+              <rect x="126" y="127" width="88" height="10" rx="3" fill="#1e1040"/>
+              <rect x="126" y="142" width="60" height="10" rx="3" fill="#a78bfa" opacity=".7"/>
+              <!-- side decoration -->
+              <rect x="8" y="20" width="95" height="140" rx="8" fill="#130d25" opacity=".5"/>
+              <rect x="16" y="30" width="70" height="8" rx="3" fill="#1e1040"/>
+              <rect x="16" y="44" width="55" height="6" rx="3" fill="#1e1040"/>
+              <rect x="16" y="58" width="65" height="50" rx="5" fill="#1e1040"/>
+              <text x="49" y="89" font-size="20" text-anchor="middle" fill="#a78bfa" opacity=".6">📱</text>
+              <rect x="16" y="116" width="40" height="8" rx="3" fill="#a78bfa" opacity=".4"/>
+              <rect x="62" y="116" width="24" height="8" rx="3" fill="#1e1040"/>
+              <rect x="16" y="130" width="70" height="6" rx="3" fill="#1e1040"/>
+              <rect x="16" y="142" width="50" height="6" rx="3" fill="#1e1040"/>
+            </svg>
+          </div>
+          <div class="proj-body">
+            <div class="proj-chips"><span class="chip">Flutter</span><span class="chip">Firebase</span></div>
+            <div class="proj-name">ئەپی مۆبایل</div>
+            <div class="proj-desc">ئەپڵیکەیشنی مۆبایل بۆ iOS و Android بە بەکارهێنانی Flutter و Firebase.</div>
+          </div>
+        </div>
+
+        <!-- 3. سیستەمی بەڕێوەبردن / Dashboard -->
+        <div class="proj reveal">
+          <div class="proj-thumb" style="background:#030d08;padding:0;overflow:hidden">
+            <svg viewBox="0 0 340 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+              <rect width="340" height="180" fill="#030d08"/>
+              <!-- sidebar -->
+              <rect x="0" y="0" width="60" height="180" fill="#061a0f"/>
+              <circle cx="30" cy="18" r="8" fill="#10b981" opacity=".3"/>
+              <text x="30" y="22" font-size="10" text-anchor="middle" fill="#10b981">D</text>
+              <rect x="8" y="36" width="44" height="8" rx="3" fill="#0d2e1a"/>
+              <rect x="8" y="50" width="44" height="8" rx="3" fill="#10b981" opacity=".2"/>
+              <rect x="8" y="64" width="44" height="8" rx="3" fill="#0d2e1a"/>
+              <rect x="8" y="78" width="44" height="8" rx="3" fill="#0d2e1a"/>
+              <rect x="8" y="92" width="44" height="8" rx="3" fill="#0d2e1a"/>
+              <!-- topbar -->
+              <rect x="60" y="0" width="280" height="26" fill="#040f08"/>
+              <rect x="70" y="8" width="80" height="10" rx="3" fill="#0d2e1a"/>
+              <rect x="290" y="7" width="22" height="12" rx="6" fill="#10b981" opacity=".3"/>
+              <circle cx="326" cy="13" r="7" fill="#0d2e1a"/>
+              <!-- stat cards -->
+              <rect x="68" y="34" width="56" height="38" rx="5" fill="#061a0f" stroke="#10b981" stroke-width=".5" stroke-opacity=".3"/>
+              <text x="96" y="52" font-size="13" text-anchor="middle" fill="#10b981">↑</text>
+              <rect x="72" y="57" width="35" height="5" rx="2" fill="#10b981" opacity=".5"/>
+              <rect x="132" y="34" width="56" height="38" rx="5" fill="#061a0f" stroke="#6ee7f7" stroke-width=".5" stroke-opacity=".3"/>
+              <text x="160" y="52" font-size="10" text-anchor="middle" fill="#6ee7f7">4.2k</text>
+              <rect x="136" y="57" width="35" height="5" rx="2" fill="#6ee7f7" opacity=".5"/>
+              <rect x="196" y="34" width="56" height="38" rx="5" fill="#061a0f" stroke="#a78bfa" stroke-width=".5" stroke-opacity=".3"/>
+              <text x="224" y="52" font-size="10" text-anchor="middle" fill="#a78bfa">98%</text>
+              <rect x="200" y="57" width="35" height="5" rx="2" fill="#a78bfa" opacity=".5"/>
+              <rect x="260" y="34" width="56" height="38" rx="5" fill="#061a0f" stroke="#f472b6" stroke-width=".5" stroke-opacity=".3"/>
+              <text x="288" y="52" font-size="10" text-anchor="middle" fill="#f472b6">$12k</text>
+              <rect x="264" y="57" width="35" height="5" rx="2" fill="#f472b6" opacity=".5"/>
+              <!-- chart -->
+              <rect x="68" y="80" width="148" height="88" rx="5" fill="#061a0f"/>
+              <polyline points="78,148 98,130 118,138 138,115 158,120 178,100 198,108" stroke="#10b981" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="78,148 98,130 118,138 138,115 158,120 178,100 198,108 198,148" stroke="#10b981" stroke-width="0" fill="#10b981" fill-opacity=".08"/>
+              <line x1="78" y1="90" x2="208" y2="90" stroke="#0d2e1a" stroke-width=".5"/>
+              <line x1="78" y1="110" x2="208" y2="110" stroke="#0d2e1a" stroke-width=".5"/>
+              <line x1="78" y1="130" x2="208" y2="130" stroke="#0d2e1a" stroke-width=".5"/>
+              <!-- table -->
+              <rect x="224" y="80" width="92" height="88" rx="5" fill="#061a0f"/>
+              <rect x="230" y="88" width="80" height="7" rx="2" fill="#0d2e1a"/>
+              <rect x="230" y="100" width="80" height="6" rx="2" fill="#0d2e1a"/>
+              <rect x="230" y="111" width="60" height="6" rx="2" fill="#10b981" opacity=".3"/>
+              <rect x="230" y="122" width="80" height="6" rx="2" fill="#0d2e1a"/>
+              <rect x="230" y="133" width="45" height="6" rx="2" fill="#0d2e1a"/>
+              <rect x="230" y="144" width="70" height="6" rx="2" fill="#0d2e1a"/>
+            </svg>
+          </div>
+          <div class="proj-body">
+            <div class="proj-chips"><span class="chip">Python</span><span class="chip">Django</span><span class="chip">MySQL</span></div>
+            <div class="proj-name">سیستەمی بەڕێوەبردن</div>
+            <div class="proj-desc">پانێڵی بەڕێوەبردنی پیشەیی بۆ کۆمپانیاکان و بازرگانیەکان.</div>
+          </div>
+        </div>
+
+        <!-- 4. وێبسایتی کۆرپۆرەیت -->
+        <div class="proj reveal">
+          <div class="proj-thumb" style="background:#0a0500;padding:0;overflow:hidden">
+            <svg viewBox="0 0 340 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+              <rect width="340" height="180" fill="#0a0500"/>
+              <!-- nav -->
+              <rect x="0" y="0" width="340" height="24" fill="#120800"/>
+              <rect x="10" y="8" width="50" height="8" rx="2" fill="#f59e0b" opacity=".8"/>
+              <rect x="230" y="8" width="30" height="8" rx="2" fill="#1f1200"/>
+              <rect x="268" y="8" width="30" height="8" rx="2" fill="#1f1200"/>
+              <rect x="306" y="7" width="24" height="10" rx="3" fill="#f59e0b" opacity=".7"/>
+              <!-- hero -->
+              <rect x="0" y="24" width="340" height="80" fill="#0f0800"/>
+              <rect x="20" y="36" width="130" height="14" rx="3" fill="#f59e0b" opacity=".15"/>
+              <rect x="20" y="56" width="100" height="8" rx="2" fill="#e2e8f0" opacity=".5"/>
+              <rect x="20" y="70" width="120" height="8" rx="2" fill="#e2e8f0" opacity=".3"/>
+              <rect x="20" y="84" width="60" height="14" rx="4" fill="#f59e0b" opacity=".8"/>
+              <!-- hero image -->
+              <rect x="200" y="28" width="130" height="70" rx="6" fill="#1f1200"/>
+              <rect x="210" y="36" width="110" height="54" rx="4" fill="#291800"/>
+              <text x="265" y="68" font-size="28" text-anchor="middle" fill="#f59e0b" opacity=".2">🏢</text>
+              <!-- cards row -->
+              <rect x="10" y="112" width="96" height="58" rx="5" fill="#120800"/>
+              <rect x="18" y="120" width="20" height="20" rx="4" fill="#f59e0b" opacity=".2"/>
+              <text x="28" y="134" font-size="12" text-anchor="middle" fill="#f59e0b">💡</text>
+              <rect x="18" y="144" width="60" height="5" rx="2" fill="#e2e8f0" opacity=".3"/>
+              <rect x="18" y="153" width="45" height="4" rx="2" fill="#e2e8f0" opacity=".2"/>
+              <rect x="122" y="112" width="96" height="58" rx="5" fill="#120800"/>
+              <rect x="130" y="120" width="20" height="20" rx="4" fill="#f59e0b" opacity=".2"/>
+              <text x="140" y="134" font-size="12" text-anchor="middle" fill="#f59e0b">🚀</text>
+              <rect x="130" y="144" width="60" height="5" rx="2" fill="#e2e8f0" opacity=".3"/>
+              <rect x="130" y="153" width="45" height="4" rx="2" fill="#e2e8f0" opacity=".2"/>
+              <rect x="234" y="112" width="96" height="58" rx="5" fill="#120800"/>
+              <rect x="242" y="120" width="20" height="20" rx="4" fill="#f59e0b" opacity=".2"/>
+              <text x="252" y="134" font-size="12" text-anchor="middle" fill="#f59e0b">🎯</text>
+              <rect x="242" y="144" width="60" height="5" rx="2" fill="#e2e8f0" opacity=".3"/>
+              <rect x="242" y="153" width="45" height="4" rx="2" fill="#e2e8f0" opacity=".2"/>
+            </svg>
+          </div>
+          <div class="proj-body">
+            <div class="proj-chips"><span class="chip">HTML/CSS</span><span class="chip">JS</span><span class="chip">PHP</span></div>
+            <div class="proj-name">وێبسایتی کۆرپۆرەیت</div>
+            <div class="proj-desc">وێبسایتی ڕاستەخۆ بۆ پیشەسازیەکان بە دیزاینی نوێ و مۆدێرن.</div>
+          </div>
+        </div>
+
+        <!-- 5. چاتبۆتی زیرەک -->
+        <div class="proj reveal">
+          <div class="proj-thumb" style="background:#05080f;padding:0;overflow:hidden">
+            <svg viewBox="0 0 340 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+              <rect width="340" height="180" fill="#05080f"/>
+              <!-- chat window -->
+              <rect x="10" y="8" width="220" height="164" rx="10" fill="#090f1e"/>
+              <!-- topbar chat -->
+              <rect x="10" y="8" width="220" height="30" rx="10" fill="#0d1633"/>
+              <rect x="10" y="28" width="220" height="10" fill="#0d1633"/>
+              <circle cx="30" cy="23" r="10" fill="#1e3a8a"/>
+              <text x="30" y="27" font-size="10" text-anchor="middle" fill="#6ee7f7">🤖</text>
+              <rect x="48" y="17" width="60" height="7" rx="2" fill="#1e3a5c"/>
+              <rect x="48" y="27" width="40" height="5" rx="2" fill="#10b981" opacity=".5"/>
+              <!-- messages -->
+              <rect x="18" y="46" width="120" height="22" rx="8" rx-top-left="2" fill="#0d1633"/>
+              <rect x="22" y="52" width="90" height="5" rx="2" fill="#94a3b8" opacity=".6"/>
+              <rect x="22" y="60" width="70" height="5" rx="2" fill="#94a3b8" opacity=".4"/>
+              <rect x="88" y="76" width="130" height="22" rx="8" fill="#1e3a8a"/>
+              <rect x="94" y="82" width="100" height="5" rx="2" fill="#6ee7f7" opacity=".7"/>
+              <rect x="94" y="90" width="80" height="5" rx="2" fill="#6ee7f7" opacity=".5"/>
+              <rect x="18" y="106" width="140" height="22" rx="8" fill="#0d1633"/>
+              <rect x="24" y="112" width="110" height="5" rx="2" fill="#94a3b8" opacity=".6"/>
+              <rect x="24" y="120" width="80" height="5" rx="2" fill="#94a3b8" opacity=".4"/>
+              <!-- typing indicator -->
+              <rect x="18" y="136" width="50" height="18" rx="9" fill="#0d1633"/>
+              <circle cx="32" cy="145" r="3" fill="#94a3b8" opacity=".4"/>
+              <circle cx="42" cy="145" r="3" fill="#94a3b8" opacity=".6"/>
+              <circle cx="52" cy="145" r="3" fill="#94a3b8" opacity=".8"/>
+              <!-- input -->
+              <rect x="10" y="158" width="220" height="14" rx="0" fill="#0d1633"/>
+              <rect x="16" y="161" width="140" height="8" rx="3" fill="#1e2d4a"/>
+              <rect x="166" y="160" width="24" height="10" rx="4" fill="#6ee7f7" opacity=".8"/>
+              <text x="178" y="168" font-size="8" text-anchor="middle" fill="#050508">↑</text>
+              <!-- right panel -->
+              <rect x="240" y="8" width="92" height="164" rx="10" fill="#090f1e"/>
+              <rect x="248" y="18" width="76" height="6" rx="2" fill="#1e3a5c"/>
+              <rect x="248" y="30" width="76" height="30" rx="5" fill="#0d1633"/>
+              <text x="286" y="50" font-size="16" text-anchor="middle" fill="#6ee7f7" opacity=".4">🧠</text>
+              <rect x="248" y="68" width="76" height="5" rx="2" fill="#1e3a5c"/>
+              <rect x="248" y="78" width="50" height="5" rx="2" fill="#6ee7f7" opacity=".3"/>
+              <rect x="248" y="90" width="76" height="5" rx="2" fill="#1e3a5c"/>
+              <rect x="248" y="104" width="76" height="40" rx="5" fill="#0d1633"/>
+              <rect x="254" y="112" width="40" height="4" rx="2" fill="#10b981" opacity=".5"/>
+              <rect x="254" y="120" width="55" height="4" rx="2" fill="#10b981" opacity=".3"/>
+              <rect x="254" y="128" width="30" height="4" rx="2" fill="#10b981" opacity=".5"/>
+              <rect x="248" y="152" width="76" height="12" rx="4" fill="#6ee7f7" opacity=".15"/>
+              <rect x="256" y="156" width="50" height="4" rx="2" fill="#6ee7f7" opacity=".4"/>
+            </svg>
+          </div>
+          <div class="proj-body">
+            <div class="proj-chips"><span class="chip">Python</span><span class="chip">AI/ML</span></div>
+            <div class="proj-name">چاتبۆتی زیرەک</div>
+            <div class="proj-desc">بۆتی زیرەکی خۆکار بۆ پشتیوانی کڕیار و وەڵامدانەوەی خودکار.</div>
+          </div>
+        </div>
+
+        <!-- 6. سیستەمی نەخۆشخانە -->
+        <div class="proj reveal">
+          <div class="proj-thumb" style="background:#080510;padding:0;overflow:hidden">
+            <svg viewBox="0 0 340 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+              <rect width="340" height="180" fill="#080510"/>
+              <rect x="0" y="0" width="70" height="180" fill="#0a0615"/>
+              <circle cx="35" cy="20" r="10" fill="#7c3aed" opacity=".3"/>
+              <text x="35" y="25" font-size="12" text-anchor="middle" fill="#a78bfa">+</text>
+              <rect x="8" y="40" width="54" height="8" rx="3" fill="#a78bfa" opacity=".2"/>
+              <rect x="8" y="54" width="54" height="8" rx="3" fill="#170d2e"/>
+              <rect x="8" y="68" width="54" height="8" rx="3" fill="#170d2e"/>
+              <rect x="8" y="82" width="54" height="8" rx="3" fill="#170d2e"/>
+              <rect x="8" y="96" width="54" height="8" rx="3" fill="#170d2e"/>
+              <!-- main area -->
+              <rect x="78" y="8" width="254" height="22" rx="4" fill="#0d0a1a"/>
+              <rect x="86" y="14" width="60" height="10" rx="3" fill="#170d2e"/>
+              <rect x="280" y="12" width="44" height="14" rx="4" fill="#7c3aed" opacity=".6"/>
+              <!-- patient cards -->
+              <rect x="78" y="38" width="118" height="130" rx="6" fill="#0d0a1a"/>
+              <rect x="86" y="46" width="80" height="6" rx="2" fill="#a78bfa" opacity=".5"/>
+              <!-- patient rows -->
+              <rect x="86" y="60" width="102" height="22" rx="4" fill="#170d2e"/>
+              <circle cx="98" cy="71" r="7" fill="#7c3aed" opacity=".3"/>
+              <text x="98" y="75" font-size="9" text-anchor="middle" fill="#a78bfa">👤</text>
+              <rect x="110" y="65" width="50" height="5" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="110" y="73" width="35" height="4" rx="2" fill="#a78bfa" opacity=".4"/>
+              <rect x="86" y="88" width="102" height="22" rx="4" fill="#170d2e"/>
+              <circle cx="98" cy="99" r="7" fill="#7c3aed" opacity=".3"/>
+              <text x="98" y="103" font-size="9" text-anchor="middle" fill="#a78bfa">👤</text>
+              <rect x="110" y="93" width="50" height="5" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="110" y="101" width="35" height="4" rx="2" fill="#10b981" opacity=".5"/>
+              <rect x="86" y="116" width="102" height="22" rx="4" fill="#170d2e"/>
+              <circle cx="98" cy="127" r="7" fill="#7c3aed" opacity=".3"/>
+              <text x="98" y="131" font-size="9" text-anchor="middle" fill="#a78bfa">👤</text>
+              <rect x="110" y="121" width="50" height="5" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="110" y="129" width="35" height="4" rx="2" fill="#f472b6" opacity=".5"/>
+              <rect x="86" y="144" width="102" height="16" rx="4" fill="#170d2e"/>
+              <!-- detail panel -->
+              <rect x="204" y="38" width="128" height="130" rx="6" fill="#0d0a1a"/>
+              <rect x="212" y="46" width="112" height="28" rx="4" fill="#170d2e"/>
+              <circle cx="228" cy="60" r="10" fill="#7c3aed" opacity=".25"/>
+              <text x="228" y="65" font-size="12" text-anchor="middle" fill="#a78bfa">👤</text>
+              <rect x="244" y="52" width="55" height="5" rx="2" fill="#e2e8f0" opacity=".5"/>
+              <rect x="244" y="61" width="40" height="4" rx="2" fill="#a78bfa" opacity=".4"/>
+              <rect x="212" y="80" width="50" height="22" rx="4" fill="#170d2e"/>
+              <rect x="216" y="87" width="30" height="4" rx="2" fill="#6ee7f7" opacity=".4"/>
+              <rect x="216" y="94" width="38" height="5" rx="2" fill="#6ee7f7" opacity=".6"/>
+              <rect x="270" y="80" width="54" height="22" rx="4" fill="#170d2e"/>
+              <rect x="274" y="87" width="30" height="4" rx="2" fill="#10b981" opacity=".4"/>
+              <rect x="274" y="94" width="38" height="5" rx="2" fill="#10b981" opacity=".6"/>
+              <rect x="212" y="110" width="112" height="50" rx="4" fill="#170d2e"/>
+              <rect x="218" y="118" width="80" height="4" rx="2" fill="#e2e8f0" opacity=".3"/>
+              <rect x="218" y="126" width="95" height="4" rx="2" fill="#e2e8f0" opacity=".2"/>
+              <rect x="218" y="134" width="60" height="4" rx="2" fill="#e2e8f0" opacity=".3"/>
+              <rect x="218" y="148" width="40" height="8" rx="3" fill="#7c3aed" opacity=".6"/>
+              <rect x="266" y="148" width="50" height="8" rx="3" fill="#170d2e"/>
+            </svg>
+          </div>
+          <div class="proj-body">
+            <div class="proj-chips"><span class="chip">React</span><span class="chip">Express</span></div>
+            <div class="proj-name">سیستەمی نەخۆشخانە</div>
+            <div class="proj-desc">سیستەمی تۆمارکردنی نەخۆشان و بەڕێوەبردنی نەخۆشخانەکان.</div>
+          </div>
+        </div>
+
+        <!-- 7. ئەپی بەڕێوەبردنی کاروبار -->
+        <div class="proj reveal">
+          <div class="proj-thumb" style="background:#04080f;padding:0;overflow:hidden">
+            <svg viewBox="0 0 340 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+              <rect width="340" height="180" fill="#04080f"/>
+              <rect x="0" y="0" width="340" height="26" fill="#060c18"/>
+              <rect x="10" y="9" width="80" height="8" rx="3" fill="#1e3a5c"/>
+              <rect x="260" y="7" width="24" height="12" rx="3" fill="#6ee7f7" opacity=".15"/>
+              <rect x="292" y="7" width="24" height="12" rx="3" fill="#1e3a5c"/>
+              <circle cx="328" cy="13" r="7" fill="#1e3a5c"/>
+              <!-- kanban columns -->
+              <rect x="8" y="34" width="98" height="138" rx="6" fill="#07101f"/>
+              <rect x="14" y="40" width="60" height="8" rx="3" fill="#1e3a5c"/>
+              <rect x="80" y="39" width="18" height="10" rx="3" fill="#6ee7f7" opacity=".2"/>
+              <text x="89" y="48" font-size="8" text-anchor="middle" fill="#6ee7f7">3</text>
+              <!-- todo cards -->
+              <rect x="14" y="56" width="86" height="30" rx="4" fill="#0d1b2e"/>
+              <rect x="20" y="62" width="60" height="5" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="20" y="70" width="45" height="4" rx="2" fill="#e2e8f0" opacity=".2"/>
+              <rect x="20" y="77" width="20" height="4" rx="2" fill="#6ee7f7" opacity=".3"/>
+              <rect x="14" y="92" width="86" height="30" rx="4" fill="#0d1b2e"/>
+              <rect x="20" y="98" width="55" height="5" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="20" y="106" width="40" height="4" rx="2" fill="#e2e8f0" opacity=".2"/>
+              <rect x="20" y="113" width="25" height="4" rx="2" fill="#f472b6" opacity=".4"/>
+              <rect x="14" y="128" width="86" height="30" rx="4" fill="#0d1b2e"/>
+              <rect x="20" y="134" width="50" height="5" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="20" y="142" width="35" height="4" rx="2" fill="#e2e8f0" opacity=".2"/>
+              <!-- in progress -->
+              <rect x="114" y="34" width="98" height="138" rx="6" fill="#07101f"/>
+              <rect x="120" y="40" width="70" height="8" rx="3" fill="#1e3a5c"/>
+              <rect x="196" y="39" width="18" height="10" rx="3" fill="#f59e0b" opacity=".2"/>
+              <text x="205" y="48" font-size="8" text-anchor="middle" fill="#f59e0b">2</text>
+              <rect x="120" y="56" width="86" height="48" rx="4" fill="#0d1b2e" stroke="#f59e0b" stroke-width=".5" stroke-opacity=".3"/>
+              <rect x="126" y="62" width="65" height="5" rx="2" fill="#e2e8f0" opacity=".5"/>
+              <rect x="126" y="70" width="50" height="4" rx="2" fill="#e2e8f0" opacity=".3"/>
+              <rect x="126" y="79" width="74" height="4" rx="2" fill="#e2e8f0" opacity=".2"/>
+              <rect x="126" y="88" width="30" height="8" rx="3" fill="#f59e0b" opacity=".3"/>
+              <text x="141" y="95" font-size="7" text-anchor="middle" fill="#f59e0b">50%</text>
+              <rect x="120" y="110" width="86" height="30" rx="4" fill="#0d1b2e"/>
+              <rect x="126" y="116" width="60" height="5" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="126" y="124" width="45" height="4" rx="2" fill="#e2e8f0" opacity=".2"/>
+              <!-- done -->
+              <rect x="220" y="34" width="112" height="138" rx="6" fill="#07101f"/>
+              <rect x="226" y="40" width="50" height="8" rx="3" fill="#1e3a5c"/>
+              <rect x="282" y="39" width="18" height="10" rx="3" fill="#10b981" opacity=".2"/>
+              <text x="291" y="48" font-size="8" text-anchor="middle" fill="#10b981">4</text>
+              <rect x="226" y="56" width="98" height="28" rx="4" fill="#0d1b2e"/>
+              <rect x="232" y="63" width="65" height="5" rx="2" fill="#e2e8f0" opacity=".3"/>
+              <rect x="232" y="71" width="45" height="4" rx="2" fill="#10b981" opacity=".4"/>
+              <rect x="226" y="90" width="98" height="28" rx="4" fill="#0d1b2e"/>
+              <rect x="232" y="97" width="70" height="5" rx="2" fill="#e2e8f0" opacity=".3"/>
+              <rect x="232" y="105" width="50" height="4" rx="2" fill="#10b981" opacity=".4"/>
+              <rect x="226" y="124" width="98" height="28" rx="4" fill="#0d1b2e"/>
+              <rect x="232" y="131" width="55" height="5" rx="2" fill="#e2e8f0" opacity=".3"/>
+              <rect x="232" y="139" width="40" height="4" rx="2" fill="#10b981" opacity=".4"/>
+            </svg>
+          </div>
+          <div class="proj-body">
+            <div class="proj-chips"><span class="chip">React</span><span class="chip">Node.js</span><span class="chip">PostgreSQL</span></div>
+            <div class="proj-name">ئەپی بەڕێوەبردنی کاروبار</div>
+            <div class="proj-desc">پلاتفۆرمی تەواو بۆ بەڕێوەبردنی کارەکان، ئامادەکاریەکان و تیمەکان — بە ئەفیکتی ڕاستەکات و ئاگادارکردنەوەی خۆکار.</div>
+          </div>
+        </div>
+
+        <!-- 8. ئەپی داواکاری خواردن -->
+        <div class="proj reveal">
+          <div class="proj-thumb" style="background:#0d0415;padding:0;overflow:hidden">
+            <svg viewBox="0 0 340 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+              <rect width="340" height="180" fill="#0d0415"/>
+              <!-- phone mockup centered -->
+              <rect x="120" y="6" width="100" height="168" rx="16" fill="#1a0a2e" stroke="#7c3aed" stroke-width="1" stroke-opacity=".3"/>
+              <rect x="148" y="12" width="44" height="5" rx="2.5" fill="#2d1050"/>
+              <rect x="127" y="22" width="86" height="145" rx="8" fill="#110820"/>
+              <!-- header -->
+              <rect x="127" y="22" width="86" height="22" rx="8" fill="#1a0f35"/>
+              <rect x="127" y="35" width="86" height="9" fill="#1a0f35"/>
+              <rect x="133" y="27" width="40" height="6" rx="2" fill="#e2e8f0" opacity=".5"/>
+              <text x="205" y="32" font-size="12" text-anchor="middle" fill="#a78bfa">🛒</text>
+              <!-- category tabs -->
+              <rect x="130" y="48" width="24" height="10" rx="3" fill="#7c3aed" opacity=".7"/>
+              <rect x="158" y="48" width="24" height="10" rx="3" fill="#2d1050"/>
+              <rect x="186" y="48" width="24" height="10" rx="3" fill="#2d1050"/>
+              <!-- food cards -->
+              <rect x="130" y="64" width="38" height="42" rx="5" fill="#1e1040"/>
+              <rect x="133" y="67" width="32" height="22" rx="3" fill="#2d1050"/>
+              <text x="149" y="82" font-size="12" text-anchor="middle" fill="#f472b6">🍕</text>
+              <rect x="133" y="91" width="25" height="4" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="133" y="98" width="15" height="4" rx="2" fill="#a78bfa" opacity=".6"/>
+              <rect x="172" y="64" width="38" height="42" rx="5" fill="#1e1040"/>
+              <rect x="175" y="67" width="32" height="22" rx="3" fill="#2d1050"/>
+              <text x="191" y="82" font-size="12" text-anchor="middle" fill="#fbbf24">🍔</text>
+              <rect x="175" y="91" width="25" height="4" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="175" y="98" width="15" height="4" rx="2" fill="#fbbf24" opacity=".6"/>
+              <!-- order button -->
+              <rect x="130" y="112" width="80" height="16" rx="6" fill="#7c3aed" opacity=".8"/>
+              <rect x="145" y="117" width="50" height="6" rx="2" fill="#e2e8f0" opacity=".6"/>
+              <!-- map preview -->
+              <rect x="130" y="134" width="80" height="26" rx="5" fill="#1e1040"/>
+              <rect x="134" y="138" width="72" height="18" rx="3" fill="#2d1050"/>
+              <circle cx="170" cy="147" r="4" fill="#7c3aed" opacity=".6"/>
+              <line x1="155" y1="147" x2="165" y2="147" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+              <line x1="175" y1="147" x2="185" y2="147" stroke="#a78bfa" stroke-width=".8" opacity=".4"/>
+              <!-- side decorations -->
+              <rect x="8" y="20" width="102" height="140" rx="8" fill="#0d0415" opacity=".6"/>
+              <rect x="16" y="30" width="70" height="8" rx="3" fill="#1a0f35"/>
+              <rect x="16" y="44" width="85" height="60" rx="5" fill="#1a0f35"/>
+              <text x="59" y="80" font-size="22" text-anchor="middle" fill="#7c3aed" opacity=".25">🗺️</text>
+              <rect x="16" y="112" width="50" height="6" rx="2" fill="#1a0f35"/>
+              <rect x="16" y="124" width="85" height="26" rx="4" fill="#1a0f35"/>
+              <rect x="230" y="20" width="102" height="140" rx="8" fill="#0d0415" opacity=".6"/>
+              <rect x="238" y="30" width="70" height="8" rx="3" fill="#1a0f35"/>
+              <rect x="238" y="44" width="85" height="50" rx="5" fill="#1a0f35"/>
+              <rect x="238" y="100" width="60" height="6" rx="2" fill="#7c3aed" opacity=".3"/>
+              <rect x="238" y="112" width="85" height="38" rx="4" fill="#1a0f35"/>
+            </svg>
+          </div>
+          <div class="proj-body">
+            <div class="proj-chips"><span class="chip">Flutter</span><span class="chip">Firebase</span><span class="chip">Google Maps</span></div>
+            <div class="proj-name">ئەپی داواکاری خواردن</div>
+            <div class="proj-desc">ئەپڵیکەیشنی مۆبایل بۆ داواکاری خواردن لە رێستۆرانەکان بە شوێنپێدانی ڕاستەکات و پارەدانی ئۆنلاین.</div>
+          </div>
+        </div>
+
+        <!-- 9. پلاتفۆرمی فێربوونی ئۆنلاین -->
+        <div class="proj reveal">
+          <div class="proj-thumb" style="background:#030a04;padding:0;overflow:hidden">
+            <svg viewBox="0 0 340 180" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+              <rect width="340" height="180" fill="#030a04"/>
+              <rect x="0" y="0" width="340" height="26" fill="#051208"/>
+              <rect x="10" y="9" width="60" height="8" rx="3" fill="#0d2e1a"/>
+              <rect x="190" y="8" width="30" height="10" rx="3" fill="#0d2e1a"/>
+              <rect x="228" y="8" width="30" height="10" rx="3" fill="#0d2e1a"/>
+              <rect x="266" y="8" width="30" height="10" rx="3" fill="#0d2e1a"/>
+              <rect x="304" y="7" width="26" height="12" rx="4" fill="#10b981" opacity=".6"/>
+              <!-- sidebar -->
+              <rect x="0" y="26" width="64" height="154" fill="#040d06"/>
+              <rect x="8" y="34" width="48" height="8" rx="3" fill="#10b981" opacity=".2"/>
+              <rect x="8" y="48" width="48" height="8" rx="3" fill="#0d2e1a"/>
+              <rect x="8" y="62" width="48" height="8" rx="3" fill="#0d2e1a"/>
+              <rect x="8" y="76" width="48" height="8" rx="3" fill="#0d2e1a"/>
+              <rect x="8" y="90" width="48" height="8" rx="3" fill="#0d2e1a"/>
+              <!-- course grid -->
+              <rect x="72" y="34" width="130" height="72" rx="6" fill="#061a0f"/>
+              <rect x="78" y="40" width="118" height="40" rx="4" fill="#0a2210"/>
+              <text x="137" y="65" font-size="20" text-anchor="middle" fill="#10b981" opacity=".3">▶</text>
+              <rect x="78" y="84" width="70" height="6" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="78" y="94" width="50" height="5" rx="2" fill="#10b981" opacity=".4"/>
+              <rect x="210" y="34" width="122" height="72" rx="6" fill="#061a0f"/>
+              <rect x="216" y="40" width="110" height="40" rx="4" fill="#0a2210"/>
+              <text x="271" y="65" font-size="20" text-anchor="middle" fill="#10b981" opacity=".3">▶</text>
+              <rect x="216" y="84" width="70" height="6" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <rect x="216" y="94" width="50" height="5" rx="2" fill="#10b981" opacity=".4"/>
+              <!-- progress section -->
+              <rect x="72" y="114" width="260" height="58" rx="6" fill="#061a0f"/>
+              <rect x="80" y="122" width="80" height="6" rx="2" fill="#e2e8f0" opacity=".4"/>
+              <!-- progress bars -->
+              <rect x="80" y="136" width="230" height="6" rx="3" fill="#0a2210"/>
+              <rect x="80" y="136" width="160" height="6" rx="3" fill="#10b981" opacity=".7"/>
+              <text x="318" y="141" font-size="8" text-anchor="middle" fill="#10b981">69%</text>
+              <rect x="80" y="148" width="230" height="6" rx="3" fill="#0a2210"/>
+              <rect x="80" y="148" width="100" height="6" rx="3" fill="#6ee7f7" opacity=".5"/>
+              <text x="318" y="153" font-size="8" text-anchor="middle" fill="#6ee7f7">43%</text>
+              <rect x="80" y="160" width="230" height="6" rx="3" fill="#0a2210"/>
+              <rect x="80" y="160" width="195" height="6" rx="3" fill="#a78bfa" opacity=".5"/>
+              <text x="318" y="165" font-size="8" text-anchor="middle" fill="#a78bfa">85%</text>
+            </svg>
+          </div>
+          <div class="proj-body">
+            <div class="proj-chips"><span class="chip">React</span><span class="chip">Django</span><span class="chip">AI/ML</span></div>
+            <div class="proj-name">پلاتفۆرمی فێربوونی ئۆنلاین</div>
+            <div class="proj-desc">سیستەمی فێربوونی دیجیتاڵی بە وانەکانی ڤیدیۆ، تاقیکردنەوەی خۆکار و شاسی پێشکەوتنی خوێندکار.</div>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 </section>
 
-<div class="cta-section">
-  <h2>ئامادەی دەستپێکردنی؟ 🚀</h2>
-  <p>
-    ئەمڕۆ پەیوەندیمان پێوە بکە — مەشوەرەی خۆرایی و بێ مووچەی پێشەوە<br>
-    <span style="font-size:0.9em; color:var(--muted);">تواصل معنا اليوم — استشارة مجانية بدون أي التزام</span>
-  </p>
-  <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap; position:relative;">
-    <a href="https://wa.me/9647508239253" class="btn-primary">💬 واتساپ ئێستا</a>
-    <a href="mailto:kozerlak@gmail.com" class="btn-secondary">📧 ئیمەیڵ بنێرە</a>
-  </div>
-</div>
+<div class="h-line"></div>
 
+<!-- SERVICES -->
+<section id="services">
+  <div class="services-wrap">
+    <div class="reveal">
+      <div class="sec-label">خزمەتگوزاریەکان</div>
+      <h2 class="sec-title">چی <span style="background:linear-gradient(90deg,var(--gold),var(--c3));-webkit-background-clip:text;-webkit-text-fill-color:transparent">دەتوانم</span> بۆت بکەم؟</h2>
+      <p class="sec-sub">جۆری خزمەتگوزارییەکانی کە پێشکەش دەکەم</p>
+    </div>
+    <div class="svc-grid">
+      <div class="svc reveal"><div class="svc-num">01</div><div class="svc-ico">🌐</div><div class="svc-name">دروستکردنی وێبسایت</div><div class="svc-desc">وێبسایتی پیشەیی و هاوچەرخ بۆ کارە جیاوازەکانت، بە دیزاینی مۆدێرن و ئاسانی بەکارهێنان.</div></div>
+      <div class="svc reveal"><div class="svc-num">02</div><div class="svc-ico">📱</div><div class="svc-name">ئەپی مۆبایل</div><div class="svc-desc">ئەپڵیکەیشنی مۆبایل بۆ Android و iOS بە تەکنەلۆژیای نوێ و خێرا.</div></div>
+      <div class="svc reveal"><div class="svc-num">03</div><div class="svc-ico">🛒</div><div class="svc-name">فرۆشگای ئۆنلاین</div><div class="svc-desc">دروستکردنی فرۆشگای ئۆنلاین تەواو بۆ بازرگانی تۆ بە سیستەمی پارەدان و بەڕێوەبردن.</div></div>
+      <div class="svc reveal"><div class="svc-num">04</div><div class="svc-ico">⚙️</div><div class="svc-name">سیستەمی بەڕێوەبردن</div><div class="svc-desc">پانێڵی بەڕێوەبردنی پیشەیی بۆ کۆمپانیاکان — ئامرازی بەرپرسیارێتی و ئامارەکان.</div></div>
+      <div class="svc reveal"><div class="svc-num">05</div><div class="svc-ico">🔒</div><div class="svc-name">ئەمنیت و پشتیوانی</div><div class="svc-desc">پشتیوانی تەکنیکی و چارەسەرکردنی کێشەکان لە کاتی کارکردنی پرۆژەدا.</div></div>
+      <div class="svc reveal"><div class="svc-num">06</div><div class="svc-ico">🎨</div><div class="svc-name">UI / UX دیزاین</div><div class="svc-desc">دیزاینی مۆدێرن و بەکارهێنانی ئاسان بۆ ئەپڵیکەیشن و وێبسایتەکانت.</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="h-line"></div>
+
+<!-- CONTACT -->
 <section id="contact">
-  <div class="section-header reveal">
-    <div class="section-tag">پەیوەندی · تواصل</div>
-    <h2 class="section-title">پەیوەندیمان پێوە بکە</h2>
-    <p class="section-sub">ئێمە ئامادەین — هەر ڕێگایەک کە گونجاوترە بۆت</p>
-  </div>
-  <div class="contact-grid">
-    <div class="contact-card reveal">
-      <div class="contact-icon-wrap" style="background:rgba(232,36,43,0.12);">📱</div>
-      <div>
-        <div class="contact-type">واتساپ · WhatsApp</div>
-        <div class="contact-value" dir="ltr">+964 750 823 9253</div>
-        <a href="https://wa.me/9647508239253?text=سڵاو،%20دەمەوێت%20زانیاری%20لەسەر%20سیستەمەکانت%20بزانم" class="contact-btn teal" target="_blank">
-          💬 پەیام بنێرە
+  <div class="contact-wrap">
+    <div class="contact-inner">
+      <div class="reveal">
+        <div class="sec-label">پەیوەندی</div>
+        <h2 class="sec-title">ئامادەین بۆ دروست کردنی <span style="background:linear-gradient(90deg,var(--c1),var(--c2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">ئەپڵیکەیشن و وێبسایت</span> بۆ پرۆژەکانی تۆ</h2>
+        <p class="sec-sub" style="margin:0 auto">پەیوەندیم پێوە بکە ئێستا — لە واتساپ بە خێرایی وەڵامت دەدەمەوە!</p>
+      </div>
+      <div class="contact-cards">
+        <a href="https://wa.me/9640708239253" target="_blank" class="ccard reveal">
+          <div class="wa-circle">💬</div>
+          <div class="clabel">ژمارەی یەکەم</div>
+          <div class="cnum">+964 0708 239 253</div>
+          <div class="ctag">↗ واتساپ</div>
+        </a>
+        <a href="https://wa.me/96407704565817" target="_blank" class="ccard reveal">
+          <div class="wa-circle">💬</div>
+          <div class="clabel">ژمارەی دووەم</div>
+          <div class="cnum">+964 0770 456 5817</div>
+          <div class="ctag">↗ واتساپ</div>
         </a>
       </div>
-    </div>
-    <div class="contact-card reveal">
-      <div class="contact-icon-wrap" style="background:rgba(232,36,43,0.12);">📱</div>
-      <div>
-        <div class="contact-type">واتساپ · WhatsApp</div>
-        <div class="contact-value" dir="ltr">+964 770 456 5817</div>
-        <a href="https://wa.me/9647704565817?text=سڵاو،%20دەمەوێت%20زانیاری%20لەسەر%20سیستەمەکانت%20بزانم" class="contact-btn teal" target="_blank">
-          💬 پەیام بنێرە
-        </a>
-      </div>
-    </div>
-    <div class="contact-card reveal">
-      <div class="contact-icon-wrap" style="background:rgba(245,197,24,0.12);">✉️</div>
-      <div>
-        <div class="contact-type">ئیمەیڵ · البريد الإلكتروني</div>
-        <div class="contact-value" dir="ltr">kozerlak@gmail.com</div>
-        <a href="mailto:kozerlak@gmail.com?subject=زانیاری%20دەوێم&body=سڵاو" class="contact-btn email-btn" target="_blank">
-          📧 ئیمەیڵ بنێرە
-        </a>
+      <div class="trust-box reveal">
+        <div class="trust-item">من لەگەڵ کۆمپانیاکان و تاکەکەسەکان کار دەکەم</div>
+        <div class="trust-item">پرۆژەکان لە ماوەی دیاریکراودا تەواو دەکرێن</div>
+        <div class="trust-item">نرخ گونجاو و کوالیتی بەرز</div>
+        <div class="trust-item">پشتیوانی چاکردنەوە دوای تەواوکردن</div>
       </div>
     </div>
   </div>
 </section>
 
+<!-- FOOTER -->
 <footer>
-  <div class="footer-logo">
-    <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
-      <circle cx="14" cy="14" r="5" fill="#F5C518"/>
-      <line x1="14" y1="2" x2="14" y2="6.5" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-      <line x1="14" y1="21.5" x2="14" y2="26" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-      <line x1="2" y1="14" x2="6.5" y2="14" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-      <line x1="21.5" y1="14" x2="26" y2="14" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-      <line x1="5.2" y1="5.2" x2="8.4" y2="8.4" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-      <line x1="22.8" y1="5.2" x2="19.6" y2="8.4" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-      <line x1="5.2" y1="22.8" x2="8.4" y2="19.6" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-      <line x1="22.8" y1="22.8" x2="19.6" y2="19.6" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
-    </svg>
-    <span><span style="color:#E8242B;">K</span><span style="color:#fff;">urdost</span></span>
-  </div>
-  <div class="footer-divider"></div>
-  <p class="footer-tagline">© ٢٠٢٥ — هەموو مافەکان پارێزراون · جميع الحقوق محفوظة</p>
-  <p class="footer-tagline" style="margin-top:6px;">دروستکراو بە <span style="color:#E8242B;">♥</span> بۆ کارەبازاری کوردستان</p>
+  <div class="ft-logo">DEV.KRD</div>
+  <div class="ft-copy">هەموو مافەکان پارێزراون © 2025</div>
 </footer>
 
 <script>
-  // ── Scroll reveal ─────────────────────────────────────────────────────────
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        setTimeout(() => entry.target.classList.add('visible'), 80);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1 });
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+// ── CURSOR ──
+const cur = document.getElementById('cur');
+const ring = document.getElementById('ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  cur.style.left=mx+'px';cur.style.top=my+'px';
+});
+function animRing(){
+  rx+=(mx-rx)*.12;ry+=(my-ry)*.12;
+  ring.style.left=rx+'px';ring.style.top=ry+'px';
+  requestAnimationFrame(animRing);
+}
+animRing();
+document.querySelectorAll('a,.btn,.sk,.proj,.svc,.ccard,.stat').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{
+    cur.style.width='6px';cur.style.height='6px';
+    ring.style.width='60px';ring.style.height='60px';
+  });
+  el.addEventListener('mouseleave',()=>{
+    cur.style.width='12px';cur.style.height='12px';
+    ring.style.width='40px';ring.style.height='40px';
+  });
+});
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
-  function resize(canvas) {
-    canvas.width  = window.innerWidth;
-    canvas.height = document.body.scrollHeight;
+// ── ADVANCED INTERACTIVE BACKGROUND ──
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, mouse = { x: -999, y: -999 };
+
+function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+resize(); window.addEventListener('resize', resize);
+document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+// ── MATRIX RAIN COLUMNS ──
+const FONT_SIZE = 13;
+let cols, drops, matrixChars;
+const codeSnippets = [
+  'function','const','async','await','return','useState',
+  'useEffect','render','import','export','class','if','else',
+  'for','while','try','catch','fetch','then','map','filter',
+  '=>','{}','[]','()','API','SQL','div','var','let','null',
+  '01','10','</>','===','!==','&&','||','++','--','::',
+  'def','self','print','true','false','new','this','super',
+  'req','res','next','app','get','post','put','delete',
+  'db','connect','query','model','schema','find','save'
+];
+
+function initMatrix() {
+  cols = Math.floor(W / 28);
+  drops = Array.from({ length: cols }, () => Math.random() * -50);
+  matrixChars = Array.from({ length: cols }, () =>
+    codeSnippets[Math.floor(Math.random() * codeSnippets.length)]
+  );
+}
+initMatrix();
+window.addEventListener('resize', initMatrix);
+
+// ── NEURAL NETWORK NODES ──
+class Node {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.vx = (Math.random() - .5) * .4;
+    this.vy = (Math.random() - .5) * .4;
+    this.r = Math.random() * 2 + 1;
+    this.pulse = Math.random() * Math.PI * 2;
+    this.type = Math.random() < .33 ? 'cyan' : Math.random() < .5 ? 'purple' : 'pink';
+    this.colors = { cyan: '110,231,247', purple: '167,139,250', pink: '244,114,182' };
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 1. PCB CIRCUIT LINES
-  // ═══════════════════════════════════════════════════════════════════════════
-  (function initCircuit() {
-    const canvas = document.getElementById('cvs-circuit');
-    const ctx    = canvas.getContext('2d');
-    const GOLD   = '#F5C518';
-    const RED    = '#E8242B';
-    let paths    = [];
-
-    function buildPaths() {
-      paths = [];
-      const cols = Math.floor(canvas.width  / 60);
-      const rows = Math.floor(canvas.height / 60);
-      const count = Math.floor((cols * rows) * 0.08);
-      for (let i = 0; i < count; i++) {
-        const startX = Math.floor(Math.random() * cols) * 60 + 30;
-        const startY = Math.floor(Math.random() * rows) * 60 + 30;
-        const color  = Math.random() > 0.75 ? RED : GOLD;
-        const segs   = [];
-        let cx = startX, cy = startY;
-        const steps = 3 + Math.floor(Math.random() * 6);
-        for (let s = 0; s < steps; s++) {
-          const dir = Math.floor(Math.random() * 4);
-          const len = (1 + Math.floor(Math.random() * 3)) * 60;
-          let nx = cx, ny = cy;
-          if (dir === 0) nx += len;
-          else if (dir === 1) nx -= len;
-          else if (dir === 2) ny += len;
-          else                ny -= len;
-          segs.push({ x1:cx, y1:cy, x2:nx, y2:ny });
-          cx = nx; cy = ny;
-        }
-        paths.push({
-          segs, color,
-          progress: Math.random(),
-          speed: 0.0008 + Math.random() * 0.0015,
-          dot: Math.random() > 0.5,
-          alpha: 0.4 + Math.random() * 0.6
-        });
-      }
+  update() {
+    // Mouse repulsion
+    const dx = this.x - mouse.x, dy = this.y - mouse.y;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    if (d < 150) {
+      this.vx += (dx / d) * .6;
+      this.vy += (dy / d) * .6;
     }
+    this.vx *= .98; this.vy *= .98;
+    this.x += this.vx; this.y += this.vy;
+    this.pulse += .03;
+    if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+  }
+  draw() {
+    const a = .3 + Math.sin(this.pulse) * .2;
+    const c = this.colors[this.type];
+    // Glow
+    const g = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.r * 6);
+    g.addColorStop(0, `rgba(${c},${a})`);
+    g.addColorStop(1, `rgba(${c},0)`);
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.r * 6, 0, Math.PI * 2);
+    ctx.fillStyle = g; ctx.fill();
+    // Core
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${c},${a + .3})`; ctx.fill();
+  }
+}
 
-    function drawCircuit() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const now = performance.now() / 1000;
-      paths.forEach(p => {
-        p.progress += p.speed;
-        if (p.progress > 1) p.progress = 0;
-        const totalLen = p.segs.length;
-        ctx.strokeStyle = p.color;
-        ctx.lineWidth   = 1;
-        ctx.globalAlpha = p.alpha * 0.5;
-        // Draw full path dimly
-        p.segs.forEach(seg => {
-          ctx.beginPath();
-          ctx.moveTo(seg.x1, seg.y1);
-          ctx.lineTo(seg.x2, seg.y2);
-          ctx.stroke();
-        });
-        // Draw bright moving pulse
-        const segIdx = Math.floor(p.progress * totalLen);
-        const seg    = p.segs[Math.min(segIdx, totalLen - 1)];
-        if (!seg) return;
-        ctx.globalAlpha = p.alpha;
-        ctx.lineWidth   = 2;
-        ctx.shadowBlur  = 8;
-        ctx.shadowColor = p.color;
-        ctx.beginPath();
-        ctx.moveTo(seg.x1, seg.y1);
-        ctx.lineTo(seg.x2, seg.y2);
-        ctx.stroke();
-        // Draw dot at junction
-        if (p.dot) {
-          ctx.beginPath();
-          ctx.arc(seg.x2, seg.y2, 3, 0, Math.PI * 2);
-          ctx.fillStyle = p.color;
-          ctx.fill();
-        }
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1;
-      });
-      requestAnimationFrame(drawCircuit);
-    }
+const nodes = Array.from({ length: 80 }, () => new Node());
 
-    resize(canvas);
-    buildPaths();
-    drawCircuit();
-    window.addEventListener('resize', () => { resize(canvas); buildPaths(); });
-  })();
+// ── FLOATING CODE BLOCKS ──
+class CodeBlock {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = H + 20;
+    this.speed = Math.random() * .4 + .1;
+    this.opacity = Math.random() * .06 + .02;
+    this.size = Math.floor(Math.random() * 3) + 9;
+    this.lines = Array.from({ length: Math.floor(Math.random() * 4) + 2 }, () =>
+      codeSnippets[Math.floor(Math.random() * codeSnippets.length)]
+    );
+    this.color = Math.random() < .5 ? '110,231,247' : '167,139,250';
+  }
+  update() {
+    this.y -= this.speed;
+    if (this.y < -60) this.reset();
+  }
+  draw() {
+    ctx.font = `${this.size}px 'Courier New', monospace`;
+    ctx.fillStyle = `rgba(${this.color},${this.opacity})`;
+    this.lines.forEach((line, i) => {
+      ctx.fillText(line, this.x, this.y + i * (this.size + 4));
+    });
+  }
+}
+const codeBlocks = Array.from({ length: 25 }, () => {
+  const b = new CodeBlock();
+  b.y = Math.random() * H; // start spread
+  return b;
+});
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 2. NEURAL NETWORK PARTICLES
-  // ═══════════════════════════════════════════════════════════════════════════
-  (function initParticles() {
-    const canvas = document.getElementById('cvs-particles');
-    const ctx    = canvas.getContext('2d');
-    const COLORS = ['#F5C518', '#E8242B', '#FFE066', '#B8860B'];
-    let   nodes  = [];
-
-    function buildNodes() {
-      nodes = [];
-      const count = Math.floor((canvas.width * canvas.height) / 18000);
-      for (let i = 0; i < count; i++) {
-        nodes.push({
-          x:  Math.random() * canvas.width,
-          y:  Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: (Math.random() - 0.5) * 0.4,
-          r:  1 + Math.random() * 2,
-          color: COLORS[Math.floor(Math.random() * COLORS.length)],
-          pulse: Math.random() * Math.PI * 2
-        });
+// ── HEXAGONAL GRID ──
+function drawHexGrid() {
+  const size = 40, t = Date.now() * .0005;
+  ctx.lineWidth = .3;
+  for (let col = 0; col < W / (size * 1.5) + 2; col++) {
+    for (let row = 0; row < H / (size * 1.73) + 2; row++) {
+      const x = col * size * 1.5 - size;
+      const y = row * size * 1.73 + (col % 2) * size * .865 - size;
+      const dist = Math.sqrt((x - mouse.x) ** 2 + (y - mouse.y) ** 2);
+      const wave = Math.sin(t + col * .3 + row * .2) * .5 + .5;
+      const mouseEffect = Math.max(0, 1 - dist / 300);
+      const alpha = wave * .025 + mouseEffect * .06;
+      if (alpha < .005) continue;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6;
+        const hx = x + size * .9 * Math.cos(angle);
+        const hy = y + size * .9 * Math.sin(angle);
+        i === 0 ? ctx.moveTo(hx, hy) : ctx.lineTo(hx, hy);
       }
-    }
-
-    function drawParticles() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const t = performance.now() / 1000;
-      // Move nodes
-      nodes.forEach(n => {
-        n.x += n.vx;
-        n.y += n.vy;
-        if (n.x < 0 || n.x > canvas.width)  n.vx *= -1;
-        if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
-        n.pulse += 0.02;
-      });
-      // Draw connections
-      const maxDist = 130;
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const dx   = nodes[i].x - nodes[j].x;
-          const dy   = nodes[i].y - nodes[j].y;
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          if (dist < maxDist) {
-            const alpha = (1 - dist / maxDist) * 0.35;
-            ctx.globalAlpha = alpha;
-            ctx.strokeStyle = nodes[i].color;
-            ctx.lineWidth   = 0.6;
-            ctx.beginPath();
-            ctx.moveTo(nodes[i].x, nodes[i].y);
-            ctx.lineTo(nodes[j].x, nodes[j].y);
-            ctx.stroke();
-          }
-        }
-      }
-      // Draw nodes
-      nodes.forEach(n => {
-        const pulse = 0.6 + 0.4 * Math.sin(n.pulse);
-        ctx.globalAlpha = pulse;
-        ctx.shadowBlur  = 6;
-        ctx.shadowColor = n.color;
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.r * pulse, 0, Math.PI * 2);
-        ctx.fillStyle = n.color;
+      ctx.closePath();
+      const c = mouseEffect > .1 ? '110,231,247' : '167,139,250';
+      ctx.strokeStyle = `rgba(${c},${alpha})`;
+      ctx.stroke();
+      // Fill hovered hex
+      if (mouseEffect > .4) {
+        ctx.fillStyle = `rgba(110,231,247,${mouseEffect * .04})`;
         ctx.fill();
-        ctx.shadowBlur = 0;
-      });
-      ctx.globalAlpha = 1;
-      requestAnimationFrame(drawParticles);
-    }
-
-    resize(canvas);
-    buildNodes();
-    drawParticles();
-    window.addEventListener('resize', () => { resize(canvas); buildNodes(); });
-  })();
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // 3. MATRIX CODE RAIN (Kurdish/Arabic digits + code symbols)
-  // ═══════════════════════════════════════════════════════════════════════════
-  (function initMatrix() {
-    const canvas = document.getElementById('cvs-matrix');
-    const ctx    = canvas.getContext('2d');
-    const CHARS  = '٠١٢٣٤٥٦٧٨٩01{}[]<>/\|=+-*#@!?;:ABCDEFabcdef';
-    const COLS_W = 18;
-    let drops    = [];
-
-    function buildDrops() {
-      const cols = Math.floor(canvas.width / COLS_W);
-      drops = [];
-      for (let i = 0; i < cols; i++) {
-        drops.push({
-          y:     Math.random() * -canvas.height,
-          speed: 0.4 + Math.random() * 1.2,
-          len:   8  + Math.floor(Math.random() * 20),
-          color: Math.random() > 0.8 ? '#E8242B' : '#F5C518',
-          chars: Array.from({length: 30}, () => CHARS[Math.floor(Math.random() * CHARS.length)])
-        });
       }
     }
+  }
+}
 
-    function drawMatrix() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drops.forEach((d, i) => {
-        d.y += d.speed;
-        if (d.y > canvas.height + d.len * COLS_W) {
-          d.y     = Math.random() * -200;
-          d.speed = 0.4 + Math.random() * 1.2;
-          d.chars = Array.from({length: 30}, () => CHARS[Math.floor(Math.random() * CHARS.length)]);
-        }
-        for (let j = 0; j < d.len; j++) {
-          const y     = d.y - j * COLS_W;
-          if (y < 0 || y > canvas.height) continue;
-          const alpha = j === 0 ? 1 : (1 - j / d.len) * 0.7;
-          ctx.globalAlpha = alpha;
-          ctx.fillStyle   = j === 0 ? '#FFFFFF' : d.color;
-          ctx.font        = `${COLS_W - 2}px monospace`;
-          const ch = d.chars[j % d.chars.length];
-          ctx.fillText(ch, i * COLS_W, y);
-        }
-      });
-      ctx.globalAlpha = 1;
-      requestAnimationFrame(drawMatrix);
+// ── DRAW CONNECTIONS ──
+function drawConnections() {
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < 140) {
+        const a = .06 * (1 - d / 140);
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(110,231,247,${a})`;
+        ctx.lineWidth = .6;
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.stroke();
+      }
     }
+    // Mouse connection
+    const mx = nodes[i].x - mouse.x, my = nodes[i].y - mouse.y;
+    const md = Math.sqrt(mx * mx + my * my);
+    if (md < 200) {
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(110,231,247,${.15 * (1 - md / 200)})`;
+      ctx.lineWidth = 1;
+      ctx.moveTo(nodes[i].x, nodes[i].y);
+      ctx.lineTo(mouse.x, mouse.y);
+      ctx.stroke();
+    }
+  }
+}
 
-    resize(canvas);
-    buildDrops();
-    drawMatrix();
-    window.addEventListener('resize', () => { resize(canvas); buildDrops(); });
-  })();
+// ── MATRIX RAIN ──
+function drawMatrix() {
+  ctx.font = `${FONT_SIZE}px 'Courier New', monospace`;
+  for (let i = 0; i < cols; i++) {
+    const text = matrixChars[i];
+    const x = i * 28;
+    const y = drops[i] * FONT_SIZE;
+    // Head (bright)
+    ctx.fillStyle = `rgba(110,231,247,0.18)`;
+    ctx.fillText(text, x, y);
+    // Trail
+    ctx.fillStyle = `rgba(110,231,247,0.04)`;
+    ctx.fillText(text, x, y - FONT_SIZE * 3);
+
+    if (y > H && Math.random() > .975) {
+      drops[i] = 0;
+      matrixChars[i] = codeSnippets[Math.floor(Math.random() * codeSnippets.length)];
+    }
+    drops[i] += .3;
+  }
+}
+
+// ── MOUSE RIPPLE ──
+let ripples = [];
+document.addEventListener('click', e => {
+  ripples.push({ x: e.clientX, y: e.clientY, r: 0, a: .6 });
+});
+function drawRipples() {
+  ripples = ripples.filter(r => r.a > 0);
+  ripples.forEach(r => {
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(110,231,247,${r.a})`;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Inner ring
+    if (r.r > 20) {
+      ctx.beginPath();
+      ctx.arc(r.x, r.y, r.r * .6, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(167,139,250,${r.a * .5})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    r.r += 4; r.a -= .018;
+  });
+}
+
+// ── MAIN LOOP ──
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+  drawHexGrid();
+  drawMatrix();
+  codeBlocks.forEach(b => { b.update(); b.draw(); });
+  drawConnections();
+  nodes.forEach(n => { n.update(); n.draw(); });
+  drawRipples();
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ── HAMBURGER MENU ──
+function toggleMenu(){
+  document.getElementById('ham').classList.toggle('open');
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+function closeMenu(){
+  document.getElementById('ham').classList.remove('open');
+  document.getElementById('mobileMenu').classList.remove('open');
+}
+
+// ── SCROLL REVEAL ──
+const io=new IntersectionObserver(entries=>{
+  entries.forEach((e,i)=>{
+    if(e.isIntersecting){
+      setTimeout(()=>e.target.classList.add('visible'),i*60);
+    }
+  });
+},{threshold:.1});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 </script>
 </body>
 </html>
