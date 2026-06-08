@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="ckb" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kurdost | Software Systems</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;600;700;900&family=Noto+Sans+Arabic:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #F5C518;
+    --gold-light: #FFE066;
+    --gold-dark: #B8860B;
+    --deep: #0C0803;
+    --dark: #130E05;
+    --card: #1A1208;
+    --card2: #201608;
+    --accent: #8B1A1A;
+    --accent2: #E8242B;
+    --teal: #C9780C;
+    --red: #E8242B;
+    --text: #FFF8E8;
+    --muted: #9A8A6A;
+    --border: rgba(245,197,24,0.18);
+    --glow-gold: rgba(245,197,24,0.3);
+    --glow-blue: rgba(232,36,43,0.2);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Kufi Arabic', 'Noto Sans Arabic', sans-serif;
+    background: var(--deep);
+    color: var(--text);
+    direction: rtl;
+    overflow-x: hidden;
+  }
+
+  /* ══════════════════════════════
+     ANIMATED BACKGROUND
+  ══════════════════════════════ */
+  .bg-canvas {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    pointer-events: none;
+  }
+
+  .bg-blob {
+    position: absolute; border-radius: 50%;
+    filter: blur(80px); opacity: 0.55;
+    animation: blobFloat 12s ease-in-out infinite alternate;
+  }
+  .bg-blob-1 {
+    width: 700px; height: 500px;
+    background: radial-gradient(circle, #6b1a08 0%, transparent 70%);
+    top: -150px; right: -100px;
+    animation-duration: 14s;
+  }
+  .bg-blob-2 {
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, #7a5500 0%, transparent 70%);
+    bottom: -100px; left: -100px;
+    animation-duration: 18s; animation-delay: -5s;
+  }
+  .bg-blob-3 {
+    width: 400px; height: 300px;
+    background: radial-gradient(circle, rgba(245,197,24,0.15) 0%, transparent 70%);
+    top: 40%; left: 30%;
+    animation-duration: 10s; animation-delay: -2s;
+  }
+  @keyframes blobFloat {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(40px, 30px) scale(1.08); }
+  }
+
+  .bg-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(245,197,24,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(245,197,24,0.04) 1px, transparent 1px);
+    background-size: 55px 55px;
+  }
+
+  .bg-noise {
+    position: absolute; inset: 0; opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px;
+  }
+
+  .bg-scan {
+    position: absolute; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.2), rgba(232,36,43,0.2), transparent);
+    animation: scanLine 8s linear infinite;
+  }
+  @keyframes scanLine {
+    from { top: -2px; }
+    to   { top: 100vh; }
+  }
+
+  /* ══════════════════════════════
+     NAV
+  ══════════════════════════════ */
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 200;
+    padding: 0 5%;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 72px;
+    background: rgba(12,8,3,0.8);
+    backdrop-filter: blur(24px) saturate(180%);
+    border-bottom: 1px solid rgba(245,197,24,0.12);
+  }
+  nav::after {
+    content: '';
+    position: absolute; bottom: 0; left: 5%; right: 5%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.3), rgba(232,36,43,0.2), transparent);
+  }
+
+  .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .logo-icon {
+    width: 46px; height: 46px;
+    background: linear-gradient(145deg, #2a1a05, #1a1005);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,197,24,0.15);
+    flex-shrink: 0;
+  }
+  .logo-wordmark {
+    font-size: 1.6rem; font-weight: 900; letter-spacing: -0.5px; line-height: 1;
+  }
+  .logo-wordmark .k-red { color: #E8242B; }
+  .logo-wordmark .k-white { color: #fff; }
+  .logo-sub { font-size: 0.6rem; color: var(--muted); font-weight: 300; margin-top: 3px; letter-spacing: 0.5px; }
+
+  .nav-links { display: flex; gap: 30px; list-style: none; align-items: center; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none; font-size: 0.88rem;
+    transition: color 0.25s; position: relative; padding-bottom: 2px;
+  }
+  .nav-links a::after {
+    content: ''; position: absolute; bottom: -2px; right: 0; left: 0;
+    height: 1px; background: var(--gold); transform: scaleX(0);
+    transition: transform 0.25s; transform-origin: right;
+  }
+  .nav-links a:hover { color: var(--gold-light); }
+  .nav-links a:hover::after { transform: scaleX(1); transform-origin: left; }
+
+  .nav-cta {
+    background: linear-gradient(135deg,
+      rgba(245,197,24,0.18) 0%,
+      rgba(255,224,102,0.1) 50%,
+      rgba(184,134,11,0.22) 100%) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid rgba(245,197,24,0.45) !important;
+    color: #FFE066 !important;
+    padding: 9px 24px; border-radius: 10px; font-weight: 800 !important;
+    box-shadow:
+      0 4px 20px rgba(245,197,24,0.2),
+      inset 0 1px 0 rgba(255,232,80,0.3),
+      inset 0 -1px 0 rgba(0,0,0,0.15) !important;
+    text-shadow: 0 0 16px rgba(245,197,24,0.6) !important;
+    transition: all 0.3s ease !important;
+  }
+  .nav-cta:hover {
+    background: linear-gradient(135deg,
+      rgba(245,197,24,0.28) 0%,
+      rgba(255,224,102,0.18) 50%,
+      rgba(184,134,11,0.32) 100%) !important;
+    border-color: rgba(245,197,24,0.7) !important;
+    box-shadow:
+      0 6px 30px rgba(245,197,24,0.35),
+      inset 0 1px 0 rgba(255,232,80,0.45) !important;
+    transform: translateY(-1px);
+    color: #FFF0A0 !important;
+  }
+  .nav-cta::after { display: none !important; }
+
+  /* ══════════════════════════════
+     HERO
+  ══════════════════════════════ */
+  .hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; text-align: center;
+    padding: 120px 5% 80px;
+  }
+
+  .hero-glow {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -55%);
+    width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,36,43,0.06) 0%, rgba(245,197,24,0.05) 40%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(245,197,24,0.08);
+    border: 1px solid rgba(245,197,24,0.3);
+    border-radius: 50px; padding: 7px 20px;
+    font-size: 0.78rem; color: var(--gold-light);
+    margin-bottom: 32px;
+    animation: fadeUp 0.8s ease both;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 20px rgba(245,197,24,0.08), inset 0 1px 0 rgba(245,197,24,0.1);
+  }
+  .badge-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
+    animation: pulse 2s ease infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.8rem);
+    font-weight: 900; line-height: 1.15;
+    margin-bottom: 28px;
+    animation: fadeUp 0.8s 0.15s ease both;
+    text-shadow: 0 0 60px rgba(201,168,76,0.15);
+  }
+  .h1-gold {
+    background: linear-gradient(135deg, #F5C518, #FFE066, #F5C518);
+    background-size: 200%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: shimmer 4s linear infinite;
+    display: block;
+  }
+  .h1-sub-line {
+    background: linear-gradient(90deg, #E8242B, #FF6B6B, #E8242B);
+    background-size: 200%;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: shimmer 5s linear infinite reverse;
+    font-size: 0.55em; font-weight: 400; display: block; margin-top: 8px;
+    letter-spacing: 0.5px;
+  }
+  @keyframes shimmer {
+    from { background-position: 200% center; }
+    to   { background-position: -200% center; }
+  }
+
+  .hero-sub {
+    font-size: 1.1rem; color: var(--muted);
+    max-width: 600px; line-height: 1.9;
+    margin-bottom: 48px;
+    animation: fadeUp 0.8s 0.3s ease both;
+    font-weight: 300;
+  }
+  .hero-sub strong { color: var(--gold-light); font-weight: 700; }
+
+  .hero-btns {
+    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    animation: fadeUp 0.8s 0.45s ease both;
+  }
+
+  /* ══════════════════════════════
+     BUTTONS — GLASS LUXURY
+  ══════════════════════════════ */
+
+  /* Primary — golden glass */
+  .btn-primary {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg,
+      rgba(245,197,24,0.18) 0%,
+      rgba(255,224,102,0.10) 40%,
+      rgba(184,134,11,0.22) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(245,197,24,0.45);
+    color: #FFE066;
+    padding: 15px 36px; border-radius: 14px;
+    font-weight: 800; font-size: 1rem; text-decoration: none;
+    cursor: pointer; font-family: inherit;
+    letter-spacing: 0.4px;
+    box-shadow:
+      0 8px 32px rgba(245,197,24,0.2),
+      0 2px 8px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,232,80,0.35),
+      inset 0 -1px 0 rgba(0,0,0,0.2);
+    transition: all 0.3s cubic-bezier(.22,.68,0,1.2);
+    text-shadow: 0 0 20px rgba(245,197,24,0.6), 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(180deg, rgba(255,240,100,0.18) 0%, transparent 100%);
+    border-radius: 14px 14px 0 0;
+    pointer-events: none;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute; inset: 0; border-radius: 14px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255,232,80,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .btn-primary:hover {
+    background: linear-gradient(135deg,
+      rgba(245,197,24,0.28) 0%,
+      rgba(255,224,102,0.18) 40%,
+      rgba(184,134,11,0.32) 100%);
+    border-color: rgba(245,197,24,0.7);
+    box-shadow:
+      0 14px 48px rgba(245,197,24,0.35),
+      0 4px 16px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,232,80,0.5),
+      inset 0 -1px 0 rgba(0,0,0,0.2);
+    transform: translateY(-3px) scale(1.02);
+    color: #FFF0A0;
+    text-shadow: 0 0 30px rgba(245,197,24,0.9), 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .btn-primary:active { transform: translateY(-1px) scale(1); }
+
+  /* Secondary — smoky red glass */
+  .btn-secondary {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg,
+      rgba(232,36,43,0.12) 0%,
+      rgba(180,20,25,0.08) 50%,
+      rgba(232,36,43,0.14) 100%);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(232,36,43,0.35);
+    color: #FFB8BA;
+    padding: 15px 36px; border-radius: 14px;
+    font-weight: 700; font-size: 1rem; text-decoration: none;
+    cursor: pointer; font-family: inherit;
+    letter-spacing: 0.3px;
+    box-shadow:
+      0 8px 32px rgba(232,36,43,0.15),
+      0 2px 8px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,180,180,0.2),
+      inset 0 -1px 0 rgba(0,0,0,0.2);
+    transition: all 0.3s cubic-bezier(.22,.68,0,1.2);
+    text-shadow: 0 0 16px rgba(232,36,43,0.5), 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .btn-secondary::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(180deg, rgba(255,160,160,0.1) 0%, transparent 100%);
+    border-radius: 14px 14px 0 0;
+    pointer-events: none;
+  }
+  .btn-secondary:hover {
+    background: linear-gradient(135deg,
+      rgba(232,36,43,0.22) 0%,
+      rgba(180,20,25,0.15) 50%,
+      rgba(232,36,43,0.24) 100%);
+    border-color: rgba(232,36,43,0.6);
+    box-shadow:
+      0 14px 48px rgba(232,36,43,0.28),
+      0 4px 16px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,180,180,0.3),
+      inset 0 -1px 0 rgba(0,0,0,0.2);
+    transform: translateY(-3px) scale(1.02);
+    color: #FFD0D0;
+    text-shadow: 0 0 24px rgba(232,36,43,0.8), 0 1px 3px rgba(0,0,0,0.5);
+  }
+  .btn-secondary:active { transform: translateY(-1px) scale(1); }
+
+  /* Contact btn teal — reimagined as warm amber glass */
+  .contact-btn.teal {
+    background: linear-gradient(135deg,
+      rgba(245,197,24,0.15) 0%,
+      rgba(184,134,11,0.1) 50%,
+      rgba(245,197,24,0.18) 100%);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(245,197,24,0.4);
+    color: #FFE066;
+    box-shadow:
+      0 6px 24px rgba(245,197,24,0.18),
+      0 2px 6px rgba(0,0,0,0.35),
+      inset 0 1px 0 rgba(255,232,80,0.25),
+      inset 0 -1px 0 rgba(0,0,0,0.15);
+    text-shadow: 0 0 14px rgba(245,197,24,0.5);
+  }
+  .contact-btn.teal:hover {
+    background: linear-gradient(135deg,
+      rgba(245,197,24,0.26) 0%,
+      rgba(184,134,11,0.18) 50%,
+      rgba(245,197,24,0.28) 100%);
+    border-color: rgba(245,197,24,0.65);
+    box-shadow:
+      0 10px 36px rgba(245,197,24,0.32),
+      0 3px 10px rgba(0,0,0,0.35),
+      inset 0 1px 0 rgba(255,232,80,0.35);
+    transform: translateY(-2px);
+    color: #FFF0A0;
+    text-shadow: 0 0 20px rgba(245,197,24,0.8);
+  }
+
+  /* Email btn — deep red glass */
+  .contact-btn.email-btn {
+    background: linear-gradient(135deg,
+      rgba(232,36,43,0.15) 0%,
+      rgba(140,15,20,0.12) 50%,
+      rgba(232,36,43,0.18) 100%);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(232,36,43,0.4);
+    color: #FFB8BA;
+    box-shadow:
+      0 6px 24px rgba(232,36,43,0.18),
+      0 2px 6px rgba(0,0,0,0.35),
+      inset 0 1px 0 rgba(255,160,160,0.2),
+      inset 0 -1px 0 rgba(0,0,0,0.15);
+    text-shadow: 0 0 14px rgba(232,36,43,0.5);
+  }
+  .contact-btn.email-btn:hover {
+    background: linear-gradient(135deg,
+      rgba(232,36,43,0.26) 0%,
+      rgba(140,15,20,0.2) 50%,
+      rgba(232,36,43,0.28) 100%);
+    border-color: rgba(232,36,43,0.65);
+    box-shadow:
+      0 10px 36px rgba(232,36,43,0.32),
+      0 3px 10px rgba(0,0,0,0.35),
+      inset 0 1px 0 rgba(255,160,160,0.3);
+    transform: translateY(-2px);
+    color: #FFD0D0;
+    text-shadow: 0 0 20px rgba(232,36,43,0.8);
+  }
+
+  /* ══════════════════════════════
+     STATS BAR
+  ══════════════════════════════ */
+  .stats-bar {
+    position: relative; z-index: 1;
+    display: flex; justify-content: center; flex-wrap: wrap;
+    background: rgba(20,14,4,0.85);
+    border-top: 1px solid rgba(245,197,24,0.1);
+    border-bottom: 1px solid rgba(245,197,24,0.1);
+    padding: 32px 5%;
+    backdrop-filter: blur(20px);
+  }
+  .stats-bar::before {
+    content: '';
+    position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.5), rgba(232,36,43,0.3), transparent);
+  }
+  .stat-item {
+    flex: 1; min-width: 140px; max-width: 220px;
+    text-align: center; padding: 0 24px;
+    border-left: 1px solid rgba(245,197,24,0.12);
+  }
+  .stat-item:last-child { border-left: none; }
+  .stat-num {
+    font-size: 2.6rem; font-weight: 900;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+  /* ══════════════════════════════
+     SECTIONS
+  ══════════════════════════════ */
+  section { position: relative; z-index: 1; padding: 100px 5%; }
+
+  .section-header { text-align: center; margin-bottom: 64px; }
+  .section-tag {
+    display: inline-block;
+    font-size: 0.7rem; letter-spacing: 3px;
+    color: var(--gold);
+    border: 1px solid rgba(245,197,24,0.25);
+    background: rgba(245,197,24,0.06);
+    padding: 5px 18px; border-radius: 50px; margin-bottom: 16px;
+    backdrop-filter: blur(8px);
+  }
+  .section-title { font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 900; margin-bottom: 16px; }
+  .section-sub { color: var(--muted); font-size: 1rem; max-width: 500px; margin: 0 auto; line-height: 1.8; }
+
+  /* ══════════════════════════════
+     PRODUCT CARDS
+  ══════════════════════════════ */
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 24px;
+  }
+
+  .product-card {
+    background: linear-gradient(145deg, #1A1208, #120D04);
+    border: 1px solid rgba(245,197,24,0.08);
+    border-radius: 22px; overflow: hidden;
+    transition: transform 0.35s cubic-bezier(.22,.68,0,1.2), box-shadow 0.35s, border-color 0.3s;
+    position: relative;
+  }
+  .product-card::before {
+    content: ''; position: absolute; inset: 0; border-radius: 22px;
+    background: linear-gradient(145deg, rgba(245,197,24,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .product-card:hover {
+    transform: translateY(-10px) scale(1.01);
+    box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 40px rgba(245,197,24,0.12);
+    border-color: rgba(245,197,24,0.3);
+  }
+
+  .card-mockup {
+    height: 220px; position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-mockup::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 60%, rgba(10,16,32,0.7));
+    pointer-events: none;
+  }
+
+  .mockup-erp { background: linear-gradient(140deg, #1A0E03 0%, #251505 100%); }
+  .mockup-erp .m-inner { width:88%;height:78%;background:#120A02;border-radius:10px;border:1px solid rgba(245,197,24,0.1);padding:10px;display:flex;gap:8px; }
+  .m-sidebar { width:28%;background:rgba(245,197,24,0.05);border-radius:6px;padding:8px 6px;display:flex;flex-direction:column;gap:5px; }
+  .m-sidebar-item { height:10px;border-radius:3px;background:rgba(245,197,24,0.08); }
+  .m-sidebar-item.active { background:var(--gold-dark);opacity:0.8; }
+  .m-main { flex:1;display:flex;flex-direction:column;gap:8px; }
+  .m-header-bar { height:20px;background:rgba(245,197,24,0.06);border-radius:5px; }
+  .m-cards { display:grid;grid-template-columns:1fr 1fr;gap:5px; }
+  .m-mini-card { background:rgba(245,197,24,0.1);border-radius:5px;height:30px;display:flex;align-items:center;justify-content:center; }
+  .m-chart { flex:1;background:rgba(232,36,43,0.1);border-radius:5px;display:flex;align-items:flex-end;justify-content:space-around;padding:6px; }
+  .m-bar { width:10px;border-radius:2px;background:#E8242B; }
+
+  .mockup-pos { background:linear-gradient(140deg,#1A0D03 0%,#120A02 100%); }
+  .mockup-pos .m-inner { width:85%;height:80%;background:#0E0802;border-radius:10px;border:1px solid rgba(245,197,24,0.08);padding:10px;display:flex;gap:8px; }
+  .m-products-grid { width:55%;display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px; }
+  .m-prod-item { background:rgba(232,36,43,0.12);border-radius:5px;height:28px; }
+  .m-cart { flex:1;background:rgba(245,197,24,0.04);border-radius:6px;padding:6px;display:flex;flex-direction:column;gap:4px; }
+  .m-cart-row { height:9px;background:rgba(245,197,24,0.07);border-radius:3px; }
+  .m-total-box { margin-top:auto;background:rgba(232,36,43,0.25);border-radius:5px;height:22px; }
+
+  .mockup-hr { background:linear-gradient(140deg,#1A0A0A 0%,#250A0A 100%); }
+  .mockup-hr .m-inner { width:88%;height:78%;background:#100505;border-radius:10px;border:1px solid rgba(232,36,43,0.1);padding:10px;display:flex;flex-direction:column;gap:7px; }
+  .m-hr-top { display:flex;gap:6px; }
+  .m-avatar-row { display:flex;gap:6px; }
+  .m-avatar { width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#E8242B,#8B1515); }
+  .m-avatar-info { flex:1;display:flex;flex-direction:column;gap:4px;justify-content:center; }
+  .m-info-line { height:7px;background:rgba(245,197,24,0.12);border-radius:3px; }
+  .m-info-line.short { width:50%; }
+  .m-table-rows { display:flex;flex-direction:column;gap:4px; }
+  .m-table-row { height:14px;background:rgba(245,197,24,0.04);border-radius:4px;display:flex;gap:4px;align-items:center;padding:0 6px; }
+  .m-table-cell { flex:1;height:6px;background:rgba(245,197,24,0.08);border-radius:2px; }
+  .m-table-cell.accent { background:rgba(232,36,43,0.5); }
+
+  .mockup-web { background:linear-gradient(140deg,#150E03 0%,#1A1205 100%); }
+  .mockup-web .m-inner { width:88%;height:80%;background:#0E0902;border-radius:10px;border:1px solid rgba(245,197,24,0.08);overflow:hidden;display:flex;flex-direction:column; }
+  .m-browser-bar { height:22px;background:rgba(245,197,24,0.05);display:flex;align-items:center;padding:0 8px;gap:5px; }
+  .m-dot { width:7px;height:7px;border-radius:50%; }
+  .m-url-bar { flex:1;height:12px;background:rgba(245,197,24,0.08);border-radius:3px;margin-right:8px; }
+  .m-browser-content { flex:1;padding:8px;display:flex;flex-direction:column;gap:6px; }
+  .m-hero-section { height:45px;background:linear-gradient(90deg,rgba(232,36,43,0.25),rgba(245,197,24,0.15));border-radius:6px; }
+  .m-section-cols { display:flex;gap:5px;flex:1; }
+  .m-col { flex:1;background:rgba(245,197,24,0.04);border-radius:5px; }
+
+  .mockup-app { background:linear-gradient(140deg,#181005 0%,#201505 100%); }
+  .m-phone { width:110px;height:185px;background:#0A0702;border-radius:22px;border:2px solid rgba(245,197,24,0.3);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,0.5),inset 0 0 0 1px rgba(245,197,24,0.05); }
+  .m-phone-bar { height:14px;background:#0A0702;display:flex;justify-content:center;align-items:flex-end;padding-bottom:2px; }
+  .m-notch { width:30px;height:7px;background:#1A1005;border-radius:0 0 6px 6px; }
+  .m-phone-content { flex:1;background:#0F0B04;padding:6px;display:flex;flex-direction:column;gap:5px; }
+  .m-app-header { height:16px;background:linear-gradient(90deg,var(--gold-dark),var(--gold));border-radius:4px;opacity:0.8; }
+  .m-app-cards { display:grid;grid-template-columns:1fr 1fr;gap:4px; }
+  .m-app-card { height:35px;background:rgba(245,197,24,0.1);border-radius:5px; }
+  .m-app-list { display:flex;flex-direction:column;gap:4px;margin-top:2px; }
+  .m-app-row { height:10px;background:rgba(245,197,24,0.06);border-radius:3px; }
+
+  .mockup-acc { background:linear-gradient(140deg,#120D03 0%,#181005 100%); }
+  .mockup-acc .m-inner { width:88%;height:78%;background:#0C0802;border-radius:10px;border:1px solid rgba(245,197,24,0.07);padding:10px;display:flex;flex-direction:column;gap:7px; }
+  .m-top-metrics { display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px; }
+  .m-metric { background:rgba(245,197,24,0.08);border-radius:6px;height:30px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px; }
+  .m-metric-num { height:9px;width:55%;background:var(--gold);border-radius:3px;opacity:0.7; }
+  .m-metric-label { height:5px;width:70%;background:rgba(245,197,24,0.07);border-radius:2px; }
+  .m-pie-row { display:flex;gap:8px;align-items:center; }
+  .m-pie { width:45px;height:45px;border-radius:50%;background:conic-gradient(#F5C518 0% 40%,#E8242B 40% 70%,rgba(184,134,11,0.8) 70% 100%); }
+  .m-legend { flex:1;display:flex;flex-direction:column;gap:5px; }
+  .m-legend-row { display:flex;align-items:center;gap:5px; }
+  .m-legend-dot { width:8px;height:8px;border-radius:50%; }
+  .m-legend-text { height:6px;flex:1;background:rgba(245,197,24,0.08);border-radius:3px; }
+  .m-table2 { flex:1;background:rgba(245,197,24,0.03);border-radius:6px;padding:6px;display:flex;flex-direction:column;gap:4px; }
+  .m-t-row { height:11px;background:rgba(245,197,24,0.05);border-radius:3px; }
+
+  .card-body { padding: 24px 26px; }
+  .card-icon {
+    width: 48px; height: 48px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; margin-bottom: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .card-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 10px; }
+  .card-desc { font-size: 0.84rem; color: var(--muted); line-height: 1.75; margin-bottom: 18px; }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 7px; }
+  .tag {
+    font-size: 0.68rem; padding: 4px 12px; border-radius: 50px;
+    background: rgba(255,255,255,0.05);
+    color: var(--muted); border: 1px solid rgba(255,255,255,0.07);
+    transition: background 0.2s, color 0.2s;
+  }
+  .tag.gold {
+    background: rgba(245,197,24,0.1); color: var(--gold-light);
+    border-color: rgba(245,197,24,0.22);
+  }
+  .product-card:hover .tag.gold { background: rgba(245,197,24,0.18); }
+
+  .card-badge {
+    position: absolute; top: 14px; left: 14px; z-index: 5;
+    background: linear-gradient(135deg, #8B1515, #E8242B);
+    color: #fff; font-size: 0.65rem; font-weight: 800;
+    padding: 4px 12px; border-radius: 50px;
+    box-shadow: 0 2px 10px rgba(232,36,43,0.5);
+  }
+
+  /* ══════════════════════════════
+     FEATURES
+  ══════════════════════════════ */
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 20px;
+  }
+  .feature-card {
+    background: linear-gradient(145deg, rgba(26,18,8,0.95), rgba(18,13,4,0.95));
+    border: 1px solid rgba(245,197,24,0.07);
+    border-radius: 18px; padding: 30px 24px;
+    transition: border-color 0.3s, transform 0.35s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .feature-card::before {
+    content: ''; position: absolute; top: 0; right: 0; left: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.1), transparent);
+  }
+  .feature-card:hover {
+    border-color: rgba(245,197,24,0.3);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(245,197,24,0.07);
+  }
+  .feature-icon {
+    font-size: 2.2rem; margin-bottom: 16px;
+    display: inline-block;
+    filter: drop-shadow(0 0 8px rgba(201,168,76,0.3));
+  }
+  .feature-title { font-size: 1rem; font-weight: 800; margin-bottom: 10px; }
+  .feature-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.75; }
+
+  /* ══════════════════════════════
+     PROCESS
+  ══════════════════════════════ */
+  .process-steps {
+    display: flex; flex-wrap: wrap; justify-content: center;
+  }
+  .step {
+    flex: 1; min-width: 200px; max-width: 260px;
+    text-align: center; padding: 36px 20px; position: relative;
+  }
+  .step:not(:last-child)::after {
+    content: '←';
+    position: absolute; left: 0; top: 42%;
+    font-size: 1.6rem; color: var(--gold); opacity: 0.35;
+  }
+  .step-num {
+    width: 60px; height: 60px; border-radius: 50%;
+    background: linear-gradient(135deg, #8B1515, #E8242B, #FF6B6B);
+    color: #fff; font-size: 1.4rem; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px;
+    box-shadow: 0 8px 30px rgba(232,36,43,0.4), 0 0 0 6px rgba(232,36,43,0.08);
+  }
+  .step-title { font-size: 1rem; font-weight: 800; margin-bottom: 8px; }
+  .step-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.7; }
+
+  /* ══════════════════════════════
+     CTA
+  ══════════════════════════════ */
+  .cta-section {
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #120800 0%, #0C0500 50%, #180900 100%);
+    border-top: 1px solid rgba(245,197,24,0.1);
+    border-bottom: 1px solid rgba(245,197,24,0.1);
+    text-align: center; padding: 100px 5%;
+    z-index: 1;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,36,43,0.07), transparent 60%);
+    pointer-events: none;
+  }
+  .cta-section::after {
+    content: '';
+    position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.5), rgba(232,36,43,0.3), transparent);
+  }
+  .cta-section h2 { font-size: clamp(1.8rem, 3.5vw, 3rem); font-weight: 900; margin-bottom: 18px; position: relative; }
+  .cta-section p { color: var(--muted); font-size: 1rem; margin-bottom: 44px; line-height: 1.8; position: relative; }
+
+  /* ══════════════════════════════
+     CONTACT
+  ══════════════════════════════ */
+  .contact-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 20px; max-width: 920px; margin: 0 auto;
+  }
+  .contact-card {
+    background: linear-gradient(145deg, #1A1208, #120D04);
+    border: 1px solid rgba(245,197,24,0.08);
+    border-radius: 20px; padding: 30px 26px;
+    display: flex; gap: 18px; align-items: flex-start;
+    transition: border-color 0.3s, transform 0.35s cubic-bezier(.22,.68,0,1.2), box-shadow 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .contact-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.08), transparent);
+  }
+  .contact-card:hover {
+    border-color: rgba(245,197,24,0.35);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 55px rgba(0,0,0,0.5), 0 0 30px rgba(245,197,24,0.1);
+  }
+  .contact-icon-wrap {
+    width: 54px; height: 54px; border-radius: 15px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  .contact-type { font-size: 0.7rem; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.5px; }
+  .contact-value { font-size: 1.05rem; font-weight: 700; color: var(--gold-light); margin-bottom: 14px; }
+  .contact-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 10px 22px; border-radius: 10px;
+    font-weight: 800; font-size: 0.84rem; text-decoration: none;
+    font-family: inherit; position: relative; overflow: hidden;
+    transition: all 0.3s cubic-bezier(.22,.68,0,1.2);
+    cursor: pointer;
+    letter-spacing: 0.3px;
+  }
+  .contact-btn::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+    border-radius: 10px 10px 0 0;
+    pointer-events: none;
+  }
+
+  /* ══════════════════════════════
+     FOOTER
+  ══════════════════════════════ */
+  footer {
+    position: relative; z-index: 1;
+    text-align: center; padding: 48px 5%;
+    border-top: 1px solid rgba(245,197,24,0.1);
+  }
+  footer::before {
+    content: ''; position: absolute; top: 0; left: 15%; right: 15%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(245,197,24,0.35), rgba(232,36,43,0.2), transparent);
+  }
+  .footer-logo {
+    font-size: 1.6rem; font-weight: 900; margin-bottom: 12px; letter-spacing: -0.5px;
+    display: inline-flex; align-items: center; gap: 10px;
+  }
+  .footer-tagline { color: var(--muted); font-size: 0.82rem; line-height: 1.6; }
+  .footer-divider {
+    width: 40px; height: 2px; margin: 16px auto;
+    background: linear-gradient(90deg, #E8242B, #F5C518);
+    border-radius: 2px;
+  }
+
+  /* ══════════════════════════════
+     ANIMATIONS
+  ══════════════════════════════ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(36px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scroll-triggered reveal */
+  .reveal {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible {
+    opacity: 1; transform: translateY(0);
+  }
+
+  /* ══════════════════════════════
+     RESPONSIVE
+  ══════════════════════════════ */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .step::after { display: none; }
+    .hero-glow { width: 400px; height: 400px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND -->
+<div class="bg-canvas">
+  <div class="bg-blob bg-blob-1"></div>
+  <div class="bg-blob bg-blob-2"></div>
+  <div class="bg-blob bg-blob-3"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-noise"></div>
+  <div class="bg-scan"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">
+    <div class="logo-icon">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="14" r="5" fill="#F5C518"/>
+        <line x1="14" y1="2" x2="14" y2="6.5" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="14" y1="21.5" x2="14" y2="26" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="2" y1="14" x2="6.5" y2="14" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="21.5" y1="14" x2="26" y2="14" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="5.2" y1="5.2" x2="8.4" y2="8.4" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="22.8" y1="5.2" x2="19.6" y2="8.4" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="5.2" y1="22.8" x2="8.4" y2="19.6" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+        <line x1="22.8" y1="22.8" x2="19.6" y2="19.6" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-wordmark"><span class="k-red">K</span><span class="k-white">urdost</span></div>
+      <div class="logo-sub">خزمەتگوزاری تەکنەلۆژی</div>
+    </div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#products">بەرهەمەکان</a></li>
+    <li><a href="#features">تایبەتمەندیەکان</a></li>
+    <li><a href="#process">ئامادەکاری</a></li>
+    <li><a href="#contact" class="nav-cta">پەیوەندیم پێوە بکە</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="badge">
+    <div class="badge-dot"></div>
+    Kurdost · نووسەری سیستەمی پرۆفیشناڵ · مەودای ٢٥+ ساڵ
+  </div>
+  <h1>
+    <span class="h1-gold">خزمەتگوزاری تەکنەلۆژی</span>
+    <span class="h1-sub-line">Technology Services · خدمات تقنية احترافية</span>
+  </h1>
+  <p class="hero-sub">
+    لەگەڵ ئێمە ببە بە خاوەنی سیستەم و ئەپڵیکەیشنی خۆت<br>
+    با <strong>Kurdost</strong> پیشەنگی کارەکانت بێت
+  </p>
+  <div class="hero-btns">
+    <a href="#contact" class="btn-primary">🚀 دەستپێبکە ئێستا</a>
+    <a href="#products" class="btn-secondary">بینینی بەرهەمەکان</a>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <div class="stat-num">٢٥٠+</div>
+    <div class="stat-label">موشتەری کامیاب · عميل ناجح</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">١٢</div>
+    <div class="stat-label">جۆری سیستەم · نوع نظام</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">٩٩٪</div>
+    <div class="stat-label">ڕەزامەندی موشتەری · رضا العميل</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">٢٤/٧</div>
+    <div class="stat-label">پشتیوانی تەکنیکی · دعم فني</div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<section id="products">
+  <div class="section-header reveal">
+    <div class="section-tag">بەرهەمەکانمان · منتجاتنا</div>
+    <h2 class="section-title">سیستەمەکانمان</h2>
+    <p class="section-sub">هەر سیستەمێک بۆ پێداویستیت دروست دەکرێت — یەکلایی و بەئەندازە</p>
+  </div>
+
+  <div class="products-grid">
+
+    <!-- ERP -->
+    <div class="product-card reveal">
+      <div class="card-badge">نویترین</div>
+      <div class="card-mockup mockup-erp">
+        <div class="m-inner">
+          <div class="m-sidebar">
+            <div class="m-sidebar-item active"></div>
+            <div class="m-sidebar-item"></div>
+            <div class="m-sidebar-item"></div>
+            <div class="m-sidebar-item"></div>
+            <div class="m-sidebar-item active" style="opacity:0.5"></div>
+          </div>
+          <div class="m-main">
+            <div class="m-header-bar"></div>
+            <div class="m-cards">
+              <div class="m-mini-card">📦</div>
+              <div class="m-mini-card">💰</div>
+            </div>
+            <div class="m-chart">
+              <div class="m-bar" style="height:60%"></div>
+              <div class="m-bar" style="height:80%; background:var(--gold-dark)"></div>
+              <div class="m-bar" style="height:45%"></div>
+              <div class="m-bar" style="height:90%"></div>
+              <div class="m-bar" style="height:65%; background:var(--gold-dark)"></div>
+              <div class="m-bar" style="height:75%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-icon" style="background:rgba(232,36,43,0.15);">🏢</div>
+        <div class="card-title">سیستەمی ERP — بەڕێوەبردنی کاروبار</div>
+        <div class="card-desc">کنترۆڵی تەواوی کاروبارت — ئەمبار، فرۆشتن، کڕین، ژمێریاری و ڕاپۆرتی زیرەکانە لە یەک شوێن</div>
+        <div class="card-tags">
+          <span class="tag gold">ئەمبار</span>
+          <span class="tag gold">ژمێریاری</span>
+          <span class="tag">فرۆشتن</span>
+          <span class="tag">ڕاپۆرت</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- POS -->
+    <div class="product-card reveal">
+      <div class="card-mockup mockup-pos">
+        <div class="m-inner">
+          <div class="m-products-grid">
+            <div class="m-prod-item"></div><div class="m-prod-item"></div><div class="m-prod-item"></div>
+            <div class="m-prod-item"></div><div class="m-prod-item"></div><div class="m-prod-item"></div>
+          </div>
+          <div class="m-cart">
+            <div class="m-cart-row"></div>
+            <div class="m-cart-row" style="width:80%"></div>
+            <div class="m-cart-row" style="width:90%"></div>
+            <div class="m-cart-row" style="width:60%"></div>
+            <div class="m-total-box"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-icon" style="background:rgba(245,197,24,0.15);">🛒</div>
+        <div class="card-title">سیستەمی فرۆشگا — نوکتەی فرۆشتن POS</div>
+        <div class="card-desc">سیستەمی فرۆشگای خێرا و ئاسان، بارکۆد، پسوولە چاپکردن، ستۆک و ڕاپۆرتی ڕۆژانە</div>
+        <div class="card-tags">
+          <span class="tag gold">فرۆشتنی خێرا</span>
+          <span class="tag">بارکۆد</span>
+          <span class="tag">پسوولە</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HR -->
+    <div class="product-card reveal">
+      <div class="card-mockup mockup-hr">
+        <div class="m-inner">
+          <div class="m-hr-top">
+            <div style="display:flex;flex-direction:column;gap:6px;width:100%">
+              <div style="display:flex;gap:8px;align-items:center">
+                <div class="m-avatar"></div>
+                <div class="m-avatar-info">
+                  <div class="m-info-line"></div>
+                  <div class="m-info-line short"></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <div class="m-avatar" style="background:linear-gradient(135deg,#2563EB,#1E3A8A)"></div>
+                <div class="m-avatar-info">
+                  <div class="m-info-line"></div>
+                  <div class="m-info-line short"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="m-table-rows">
+            <div class="m-table-row"><div class="m-table-cell accent"></div><div class="m-table-cell"></div><div class="m-table-cell"></div></div>
+            <div class="m-table-row"><div class="m-table-cell"></div><div class="m-table-cell accent"></div><div class="m-table-cell"></div></div>
+            <div class="m-table-row"><div class="m-table-cell"></div><div class="m-table-cell"></div><div class="m-table-cell accent"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-icon" style="background:rgba(124,58,237,0.15);">👥</div>
+        <div class="card-title">سیستەمی HR — بەڕێوەبردنی کارمەندان</div>
+        <div class="card-desc">تۆماری کارمەند، مووچە، مۆڵەت، سزا، ئامانەی کات و ڕاپۆرتی تەواو بۆ بەڕێوەبردنی ئادامیانی</div>
+        <div class="card-tags">
+          <span class="tag gold">مووچە</span>
+          <span class="tag">ئامانە</span>
+          <span class="tag">مۆڵەت</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Website -->
+    <div class="product-card reveal">
+      <div class="card-mockup mockup-web">
+        <div class="m-inner">
+          <div class="m-browser-bar">
+            <div class="m-dot" style="background:#FF5F57"></div>
+            <div class="m-dot" style="background:#FEBC2E"></div>
+            <div class="m-dot" style="background:#28C840"></div>
+            <div class="m-url-bar"></div>
+          </div>
+          <div class="m-browser-content">
+            <div class="m-hero-section"></div>
+            <div class="m-section-cols">
+              <div class="m-col"></div>
+              <div class="m-col"></div>
+              <div class="m-col"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-icon" style="background:rgba(232,36,43,0.15);">🌐</div>
+        <div class="card-title">دروستکردنی ماڵپەڕ — تیلاکردنی ئینترنێت</div>
+        <div class="card-desc">ماڵپەڕی دیمەنەوەی جوان، خێرا، و گونجاو بۆ هەموو ئامێرێک — دیزاینی میۆدێرن و SEO</div>
+        <div class="card-tags">
+          <span class="tag gold">دیزاینی موودێرن</span>
+          <span class="tag">خێرا</span>
+          <span class="tag">SEO</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile App -->
+    <div class="product-card reveal">
+      <div class="card-mockup mockup-app">
+        <div class="m-phone">
+          <div class="m-phone-bar"><div class="m-notch"></div></div>
+          <div class="m-phone-content">
+            <div class="m-app-header"></div>
+            <div class="m-app-cards">
+              <div class="m-app-card"></div>
+              <div class="m-app-card"></div>
+            </div>
+            <div class="m-app-list">
+              <div class="m-app-row"></div>
+              <div class="m-app-row" style="width:75%"></div>
+              <div class="m-app-row" style="width:90%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-icon" style="background:rgba(201,168,76,0.15);">📱</div>
+        <div class="card-title">ئەپڵیکەیشنی مۆبایل — iOS & Android</div>
+        <div class="card-desc">ئەپڵیکەیشنی تایبەتی بۆ کارەکەت، خوارزەری کار لە مۆبایلەوە بەئاسانی و خێرایی</div>
+        <div class="card-tags">
+          <span class="tag gold">iOS & Android</span>
+          <span class="tag">UI/UX جوان</span>
+          <span class="tag">ئۆفلاین</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accounting -->
+    <div class="product-card reveal">
+      <div class="card-mockup mockup-acc">
+        <div class="m-inner">
+          <div class="m-top-metrics">
+            <div class="m-metric"><div class="m-metric-num"></div><div class="m-metric-label"></div></div>
+            <div class="m-metric" style="background:rgba(232,36,43,0.12)"><div class="m-metric-num" style="background:#E8242B"></div><div class="m-metric-label"></div></div>
+            <div class="m-metric"><div class="m-metric-num"></div><div class="m-metric-label"></div></div>
+          </div>
+          <div class="m-pie-row">
+            <div class="m-pie"></div>
+            <div class="m-legend">
+              <div class="m-legend-row"><div class="m-legend-dot" style="background:#F5C518"></div><div class="m-legend-text"></div></div>
+              <div class="m-legend-row"><div class="m-legend-dot" style="background:#E8242B"></div><div class="m-legend-text"></div></div>
+              <div class="m-legend-row"><div class="m-legend-dot" style="background:#B8860B"></div><div class="m-legend-text"></div></div>
+            </div>
+          </div>
+          <div class="m-table2">
+            <div class="m-t-row"></div>
+            <div class="m-t-row"></div>
+            <div class="m-t-row"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-icon" style="background:rgba(245,197,24,0.15);">📊</div>
+        <div class="card-title">سیستەمی ژمێریاری — سیستەمی ئەکاونتینگ</div>
+        <div class="card-desc">حسابداری گشتی، پسوولە و فاکتورا، باڵانسی بانک، دیون، ماف و ڕاپۆرتی دارایی</div>
+        <div class="card-tags">
+          <span class="tag gold">فاکتورا</span>
+          <span class="tag">باڵانس</span>
+          <span class="tag">ڕاپۆرت</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" style="background: rgba(22,14,4,0.7); padding:80px 5%;">
+  <div class="section-header reveal">
+    <div class="section-tag">بەتایبەتمەندی · المميزات</div>
+    <h2 class="section-title">بۆچی ئێمە؟</h2>
+    <p class="section-sub">تایبەتمەندیەکان کە سیستەمەکانمان جیاوازی دێنێ</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feature-icon">🔒</div>
+      <div class="feature-title">ئەمنی و پارێزراو</div>
+      <div class="feature-desc">داتاکەت بە رێگای ئینکریپشنی بەهێز پارێزراوە — هیچ مەترسییەک لە دەستدانی زانیاری نییە</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">خێرا و ئاسان</div>
+      <div class="feature-desc">کارکردن باشە، UI/UX گونجاو، هیچ خوێندنەوەی درێژخایەن پێویست نییە</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">📱</div>
+      <div class="feature-title">هەموو ئامێرەک</div>
+      <div class="feature-desc">لاپتۆپ، مۆبایل، تابلێت — هەر ئامێرێک بە تەواوی کار دەکات</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">🌍</div>
+      <div class="feature-title">کوردی و عەرەبی</div>
+      <div class="feature-desc">سیستەم بە زمانی کوردی سورانی و عەرەبی و ئینگلیزی دەکرێت — RTL تەواو</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">🔧</div>
+      <div class="feature-title">پشتیوانی بەردەوام</div>
+      <div class="feature-desc">تیمەکەمان ٢٤/٧ ئامادەی چارەسەرکردنی هەر کێشەیەک — بە کردارمەندی و خێرایی</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">📈</div>
+      <div class="feature-title">ڕاپۆرتی زیرەکانە</div>
+      <div class="feature-desc">ڕاپۆرت و داشبۆردی زیرەکانەی کار — بڕیاری باشتر بدە لەسەر بنەمای داتا</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="section-header reveal">
+    <div class="section-tag">پرۆسەی کار · خطوات العمل</div>
+    <h2 class="section-title">چۆن دەستپێدەکەین؟</h2>
+    <p class="section-sub">چوار هەنکاوی ئاسان بۆ دەستپێکردن بە سیستەمەکەت</p>
+  </div>
+  <div class="process-steps">
+    <div class="step reveal">
+      <div class="step-num">١</div>
+      <div class="step-title">پەیوەندی و تێبینی</div>
+      <div class="step-desc">پێوەندیمان پێوە بکە، پێداویستیەکانت ئەوەر بدە</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">٢</div>
+      <div class="step-title">شیکاری و ئامادەکاری</div>
+      <div class="step-desc">تیمەکەمان شیکاری دەکات و پلانی کار دادەنێ</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">٣</div>
+      <div class="step-title">دروستکردن و تاقیکردن</div>
+      <div class="step-desc">سیستەمەکە دروست دەکرێت و تاقی دەکرێتەوە</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num">٤</div>
+      <div class="step-title">تەسلیمکردن و پشتیوانی</div>
+      <div class="step-desc">تەسلیم و مامۆستایەتی و پشتیوانی بەردەوام</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <h2>ئامادەی دەستپێکردنی؟ 🚀</h2>
+  <p>
+    ئەمڕۆ پەیوەندیمان پێوە بکە — مەشوەرەی خۆرایی و بێ مووچەی پێشەوە<br>
+    <span style="font-size:0.9em; color:var(--muted);">تواصل معنا اليوم — استشارة مجانية بدون أي التزام</span>
+  </p>
+  <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap; position:relative;">
+    <a href="https://wa.me/9647508239253" class="btn-primary">💬 واتساپ ئێستا</a>
+    <a href="mailto:kozerlak@gmail.com" class="btn-secondary">📧 ئیمەیڵ بنێرە</a>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-header reveal">
+    <div class="section-tag">پەیوەندی · تواصل</div>
+    <h2 class="section-title">پەیوەندیمان پێوە بکە</h2>
+    <p class="section-sub">ئێمە ئامادەین — هەر ڕێگایەک کە گونجاوترە بۆت</p>
+  </div>
+  <div class="contact-grid">
+
+    <div class="contact-card reveal">
+      <div class="contact-icon-wrap" style="background:rgba(232,36,43,0.12);">📱</div>
+      <div>
+        <div class="contact-type">واتساپ · WhatsApp</div>
+        <div class="contact-value" dir="ltr">+964 750 823 9253</div>
+        <a href="https://wa.me/9647508239253?text=سڵاو،%20دەمەوێت%20زانیاری%20لەسەر%20سیستەمەکانت%20بزانم" class="contact-btn teal" target="_blank">
+          💬 پەیام بنێرە
+        </a>
+      </div>
+    </div>
+
+    <div class="contact-card reveal">
+      <div class="contact-icon-wrap" style="background:rgba(232,36,43,0.12);">📱</div>
+      <div>
+        <div class="contact-type">واتساپ · WhatsApp</div>
+        <div class="contact-value" dir="ltr">+964 770 456 5817</div>
+        <a href="https://wa.me/9647704565817?text=سڵاو،%20دەمەوێت%20زانیاری%20لەسەر%20سیستەمەکانت%20بزانم" class="contact-btn teal" target="_blank">
+          💬 پەیام بنێرە
+        </a>
+      </div>
+    </div>
+
+    <div class="contact-card reveal">
+      <div class="contact-icon-wrap" style="background:rgba(245,197,24,0.12);">✉️</div>
+      <div>
+        <div class="contact-type">ئیمەیڵ · البريد الإلكتروني</div>
+        <div class="contact-value" dir="ltr">kozerlak@gmail.com</div>
+        <a href="mailto:kozerlak@gmail.com?subject=زانیاری%20دەوێم&body=سڵاو" class="contact-btn email-btn" target="_blank">
+          📧 ئیمەیڵ بنێرە
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="14" r="5" fill="#F5C518"/>
+      <line x1="14" y1="2" x2="14" y2="6.5" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="14" y1="21.5" x2="14" y2="26" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="2" y1="14" x2="6.5" y2="14" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="21.5" y1="14" x2="26" y2="14" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="5.2" y1="5.2" x2="8.4" y2="8.4" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="22.8" y1="5.2" x2="19.6" y2="8.4" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="5.2" y1="22.8" x2="8.4" y2="19.6" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="22.8" y1="22.8" x2="19.6" y2="19.6" stroke="#F5C518" stroke-width="2.2" stroke-linecap="round"/>
+    </svg>
+    <span><span style="color:#E8242B;">K</span><span style="color:#fff;">urdost</span></span>
+  </div>
+  <div class="footer-divider"></div>
+  <p class="footer-tagline">© ٢٠٢٥ — هەموو مافەکان پارێزراون · جميع الحقوق محفوظة</p>
+  <p class="footer-tagline" style="margin-top:6px;">دروستکراو بە <span style="color:#E8242B;">♥</span> بۆ کارەبازاری کوردستان</p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => {
+          entry.target.classList.add('visible');
+        }, 80);
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
