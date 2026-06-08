@@ -695,6 +695,9 @@
   <div class="bg-grid"></div>
   <div class="bg-noise"></div>
   <div class="bg-scan"></div>
+  <canvas id="cvs-circuit" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.18;pointer-events:none;"></canvas>
+  <canvas id="cvs-particles" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.55;pointer-events:none;"></canvas>
+  <canvas id="cvs-matrix" style="position:absolute;inset:0;width:100%;height:100%;opacity:0.12;pointer-events:none;"></canvas>
 </div>
 
 <nav>
@@ -1276,6 +1279,7 @@
 </footer>
 
 <script>
+  // ── Scroll reveal ─────────────────────────────────────────────────────────
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -1285,6 +1289,234 @@
     });
   }, { threshold: 0.1 });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  function resize(canvas) {
+    canvas.width  = window.innerWidth;
+    canvas.height = document.body.scrollHeight;
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 1. PCB CIRCUIT LINES
+  // ═══════════════════════════════════════════════════════════════════════════
+  (function initCircuit() {
+    const canvas = document.getElementById('cvs-circuit');
+    const ctx    = canvas.getContext('2d');
+    const GOLD   = '#F5C518';
+    const RED    = '#E8242B';
+    let paths    = [];
+
+    function buildPaths() {
+      paths = [];
+      const cols = Math.floor(canvas.width  / 60);
+      const rows = Math.floor(canvas.height / 60);
+      const count = Math.floor((cols * rows) * 0.08);
+      for (let i = 0; i < count; i++) {
+        const startX = Math.floor(Math.random() * cols) * 60 + 30;
+        const startY = Math.floor(Math.random() * rows) * 60 + 30;
+        const color  = Math.random() > 0.75 ? RED : GOLD;
+        const segs   = [];
+        let cx = startX, cy = startY;
+        const steps = 3 + Math.floor(Math.random() * 6);
+        for (let s = 0; s < steps; s++) {
+          const dir = Math.floor(Math.random() * 4);
+          const len = (1 + Math.floor(Math.random() * 3)) * 60;
+          let nx = cx, ny = cy;
+          if (dir === 0) nx += len;
+          else if (dir === 1) nx -= len;
+          else if (dir === 2) ny += len;
+          else                ny -= len;
+          segs.push({ x1:cx, y1:cy, x2:nx, y2:ny });
+          cx = nx; cy = ny;
+        }
+        paths.push({
+          segs, color,
+          progress: Math.random(),
+          speed: 0.0008 + Math.random() * 0.0015,
+          dot: Math.random() > 0.5,
+          alpha: 0.4 + Math.random() * 0.6
+        });
+      }
+    }
+
+    function drawCircuit() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const now = performance.now() / 1000;
+      paths.forEach(p => {
+        p.progress += p.speed;
+        if (p.progress > 1) p.progress = 0;
+        const totalLen = p.segs.length;
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth   = 1;
+        ctx.globalAlpha = p.alpha * 0.5;
+        // Draw full path dimly
+        p.segs.forEach(seg => {
+          ctx.beginPath();
+          ctx.moveTo(seg.x1, seg.y1);
+          ctx.lineTo(seg.x2, seg.y2);
+          ctx.stroke();
+        });
+        // Draw bright moving pulse
+        const segIdx = Math.floor(p.progress * totalLen);
+        const seg    = p.segs[Math.min(segIdx, totalLen - 1)];
+        if (!seg) return;
+        ctx.globalAlpha = p.alpha;
+        ctx.lineWidth   = 2;
+        ctx.shadowBlur  = 8;
+        ctx.shadowColor = p.color;
+        ctx.beginPath();
+        ctx.moveTo(seg.x1, seg.y1);
+        ctx.lineTo(seg.x2, seg.y2);
+        ctx.stroke();
+        // Draw dot at junction
+        if (p.dot) {
+          ctx.beginPath();
+          ctx.arc(seg.x2, seg.y2, 3, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.fill();
+        }
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+      });
+      requestAnimationFrame(drawCircuit);
+    }
+
+    resize(canvas);
+    buildPaths();
+    drawCircuit();
+    window.addEventListener('resize', () => { resize(canvas); buildPaths(); });
+  })();
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 2. NEURAL NETWORK PARTICLES
+  // ═══════════════════════════════════════════════════════════════════════════
+  (function initParticles() {
+    const canvas = document.getElementById('cvs-particles');
+    const ctx    = canvas.getContext('2d');
+    const COLORS = ['#F5C518', '#E8242B', '#FFE066', '#B8860B'];
+    let   nodes  = [];
+
+    function buildNodes() {
+      nodes = [];
+      const count = Math.floor((canvas.width * canvas.height) / 18000);
+      for (let i = 0; i < count; i++) {
+        nodes.push({
+          x:  Math.random() * canvas.width,
+          y:  Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.4,
+          vy: (Math.random() - 0.5) * 0.4,
+          r:  1 + Math.random() * 2,
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          pulse: Math.random() * Math.PI * 2
+        });
+      }
+    }
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const t = performance.now() / 1000;
+      // Move nodes
+      nodes.forEach(n => {
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > canvas.width)  n.vx *= -1;
+        if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+        n.pulse += 0.02;
+      });
+      // Draw connections
+      const maxDist = 130;
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx   = nodes[i].x - nodes[j].x;
+          const dy   = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < maxDist) {
+            const alpha = (1 - dist / maxDist) * 0.35;
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = nodes[i].color;
+            ctx.lineWidth   = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(nodes[i].x, nodes[i].y);
+            ctx.lineTo(nodes[j].x, nodes[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+      // Draw nodes
+      nodes.forEach(n => {
+        const pulse = 0.6 + 0.4 * Math.sin(n.pulse);
+        ctx.globalAlpha = pulse;
+        ctx.shadowBlur  = 6;
+        ctx.shadowColor = n.color;
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r * pulse, 0, Math.PI * 2);
+        ctx.fillStyle = n.color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(drawParticles);
+    }
+
+    resize(canvas);
+    buildNodes();
+    drawParticles();
+    window.addEventListener('resize', () => { resize(canvas); buildNodes(); });
+  })();
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 3. MATRIX CODE RAIN (Kurdish/Arabic digits + code symbols)
+  // ═══════════════════════════════════════════════════════════════════════════
+  (function initMatrix() {
+    const canvas = document.getElementById('cvs-matrix');
+    const ctx    = canvas.getContext('2d');
+    const CHARS  = '٠١٢٣٤٥٦٧٨٩01{}[]<>/\|=+-*#@!?;:ABCDEFabcdef';
+    const COLS_W = 18;
+    let drops    = [];
+
+    function buildDrops() {
+      const cols = Math.floor(canvas.width / COLS_W);
+      drops = [];
+      for (let i = 0; i < cols; i++) {
+        drops.push({
+          y:     Math.random() * -canvas.height,
+          speed: 0.4 + Math.random() * 1.2,
+          len:   8  + Math.floor(Math.random() * 20),
+          color: Math.random() > 0.8 ? '#E8242B' : '#F5C518',
+          chars: Array.from({length: 30}, () => CHARS[Math.floor(Math.random() * CHARS.length)])
+        });
+      }
+    }
+
+    function drawMatrix() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drops.forEach((d, i) => {
+        d.y += d.speed;
+        if (d.y > canvas.height + d.len * COLS_W) {
+          d.y     = Math.random() * -200;
+          d.speed = 0.4 + Math.random() * 1.2;
+          d.chars = Array.from({length: 30}, () => CHARS[Math.floor(Math.random() * CHARS.length)]);
+        }
+        for (let j = 0; j < d.len; j++) {
+          const y     = d.y - j * COLS_W;
+          if (y < 0 || y > canvas.height) continue;
+          const alpha = j === 0 ? 1 : (1 - j / d.len) * 0.7;
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle   = j === 0 ? '#FFFFFF' : d.color;
+          ctx.font        = `${COLS_W - 2}px monospace`;
+          const ch = d.chars[j % d.chars.length];
+          ctx.fillText(ch, i * COLS_W, y);
+        }
+      });
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(drawMatrix);
+    }
+
+    resize(canvas);
+    buildDrops();
+    drawMatrix();
+    window.addEventListener('resize', () => { resize(canvas); buildDrops(); });
+  })();
 </script>
 </body>
 </html>
